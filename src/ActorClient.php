@@ -49,7 +49,7 @@ class ActorClient
                 $minKey = $index;
             }
         }
-        if($all > $this->actorConfig->getMaxActorNum()){
+        if($all >= $this->actorConfig->getMaxActorNum()){
             return -1;
         }else{
             return $this->sendAndRecv($command,$timeout,$this->generateSocketByProcessIndex($minKey));
