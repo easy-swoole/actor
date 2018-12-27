@@ -118,9 +118,8 @@ abstract class AbstractActor
 
     abstract protected function onException(\Throwable $throwable);
 
-//    public static function invoke():?ActorClient
-//    {
-//        return ActorManager::getInstance()->actorClient(static::class);
-//    }
-//
+    public static function invoke():?ActorClient
+    {
+        return Actor::getInstance()->client(static::class);
+    }
 }

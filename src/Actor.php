@@ -68,7 +68,7 @@ class Actor
 
     function client(string $actorClass):?ActorClient
     {
-        if(isset($this->list[$actorClass])){
+        if(isset($this->actorList[$actorClass])){
             return new ActorClient($this->actorList[$actorClass],$this->tempDir);
         }else{
             return null;
