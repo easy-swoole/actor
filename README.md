@@ -2,7 +2,7 @@
 提供Actor模式支持，助力游戏行业开发。EasySwoole的Actor采用自定义process作为存储载体，以协程作为最小调度单位，利用协程Channel做mail box,而客户端与process之间的通讯，采用UnixSocket实现。
 
 ## 测试代码
-### 服务端
+### 服务端-SwooleServer模式
 ```
 use EasySwoole\Actor\Actor;
 use EasySwoole\Actor\Test\RoomActor;
@@ -25,6 +25,25 @@ $http->on("request", function ($request, $response) {
 });
 
 $http->start();
+```
+
+### 服务端-Process模式
+```
+use EasySwoole\Actor\Actor;
+use EasySwoole\Actor\Test\RoomActor;
+
+Actor::getInstance()->register(RoomActor::class);
+
+
+$processes = Actor::getInstance()->initProcess();
+
+foreach ($processes as $process){
+    $process->getProcess()->start();
+}
+
+while($ret = \Swoole\Process::wait()) {
+    echo "PID={$ret['pid']}\n";
+}
 ```
 
 ### 客户端-cli单元测试

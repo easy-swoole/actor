@@ -66,6 +66,7 @@ class ActorProcess extends AbstractProcess
                                                 });
                                             }catch (\Throwable $throwable){
                                                 $this->actorAtomic--;
+                                                unset($this->actorList[$actorId]);
                                                 $actorId = null;
                                             }
                                             fwrite($conn,Protocol::pack(serialize($actorId)));
@@ -114,7 +115,7 @@ class ActorProcess extends AbstractProcess
                                             foreach ($this->actorList as $actorId => $item){
                                                 $item->getChannel()->push(['msg'=>$args,'reply'=>false]);
                                             }
-                                            fwrite($conn,Protocol::pack(serialize(true)));
+                                            fwrite($conn,Protocol::pack(serialize(count($this->actorList))));
                                             fclose($conn);
                                             break;
                                         }
