@@ -19,7 +19,8 @@
     },
     "autoload": {
         "psr-4": {
-            "EasySwoole\\Actor\\": "src/"
+            "EasySwoole\\Actor\\": "src/",
+            "EasySwoole\\Actor\\Test\\":"test/"
         }
     }
 }

@@ -36,7 +36,7 @@ class ActorClient
         $minKey = null;
         $minNum = null;
         $all = 0;
-        foreach ($info['actorNumInfo'] as $index => $createdNum)
+        foreach ($info['createNum'] as $index => $createdNum)
         {
             $all = $all + $createdNum;
             if($createdNum <= $minNum){
@@ -119,10 +119,10 @@ class ActorClient
         $command = new Command();
         $command->setCommand('createdNum');
         return [
-            'actorName'=>$this->actorConfig->getActorName(),
-            'actorMaxNum'=>$this->actorConfig->getMaxActorNum(),
-            'actorProcessNum'=>$this->actorConfig->getActorProcessNum(),
-            'actorNumInfo'=> $this->broadcast($command,$timeout)
+            'name'=>$this->actorConfig->getActorName(),
+            'maxNum'=>$this->actorConfig->getMaxActorNum(),
+            'processNum'=>$this->actorConfig->getActorProcessNum(),
+            'createNum'=> $this->broadcast($command,$timeout)
         ];
     }
 
@@ -142,8 +142,7 @@ class ActorClient
             go(function ()use($command,$channel,$i,$timeout){
                 $ret = $this->sendAndRecv($command,$timeout,$this->generateSocketByProcessIndex($i));
                 $channel->push([
-                    'index'=>$i,
-                    'result'=>$ret
+                   $i => $ret
                 ]);
             });
         }
@@ -154,7 +153,7 @@ class ActorClient
             }
             $temp = $channel->pop($timeout);
             if(is_array($temp)){
-                $info[$temp['index']] = $temp['result'];
+                $info += $temp;
             }
         }
         return $info;

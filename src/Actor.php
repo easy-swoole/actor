@@ -11,7 +11,6 @@ namespace EasySwoole\Actor;
 
 use EasySwoole\Actor\Exception\InvalidActor;
 use EasySwoole\Actor\Exception\RuntimeError;
-use EasySwoole\Component\Process\ProcessHelper;
 use EasySwoole\Component\Singleton;
 
 class Actor
@@ -77,6 +76,16 @@ class Actor
 
     function attachToServer(\swoole_server $server)
     {
+        $list = $this->initProcess();
+        foreach ($list as $process){
+            /** @var $proces ActorProcess */
+            $server->addProcess($process->getProcess());
+        }
+    }
+
+    function initProcess():array
+    {
+        $processList = [];
         foreach ($this->actorList as $actorClass => $config){
             $subName = "{$this->serverName}.ActorProcess.{$config->getActorName()}";
             for($i = 0;$i < $config->getActorProcessNum();$i++){
@@ -87,8 +96,9 @@ class Actor
                 $processConfig->setIndex($i);
                 $processConfig->setProcessName($finaleName);
                 $process = new ActorProcess($finaleName,$processConfig);
-                ProcessHelper::register($server,$process);
+                $processList[] = $process;
             }
         }
+        return $processList;
     }
 }
