@@ -15,11 +15,13 @@ class ActorClient
 {
     private $actorConfig;
     private $tempDir;
+    private $serverName;
 
-    function __construct(ActorConfig $config,string $tempDir)
+    function __construct(ActorConfig $config,string $tempDir,string $serverName)
     {
         $this->actorConfig = $config;
         $this->tempDir = $tempDir;
+        $this->serverName = $serverName;
     }
 
     /*
@@ -161,7 +163,7 @@ class ActorClient
 
     private function generateSocketByProcessIndex($processIndex):string
     {
-        return $this->tempDir."/{$this->actorConfig->getServerName()}.ActorProcess.{$this->actorConfig->getActorName()}.{$processIndex}.sock";
+        return $this->tempDir."/{$this->serverName}.ActorProcess.{$this->actorConfig->getActorName()}.{$processIndex}.sock";
     }
 
     private function generateSocketByActorId(string $actorId):string

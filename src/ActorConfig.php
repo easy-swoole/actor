@@ -14,7 +14,6 @@ class ActorConfig
     protected $actorName;
     protected $actorProcessNum = 3;
     protected $maxActorNum = 10000;
-    protected $serverName;
 
     /**
      * @return mixed
@@ -62,21 +61,5 @@ class ActorConfig
     public function setMaxActorNum(int $maxActorNum): void
     {
         $this->maxActorNum = $maxActorNum;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getServerName()
-    {
-        return $this->serverName;
-    }
-
-    /**
-     * @param mixed $serverName
-     */
-    public function setServerName($serverName): void
-    {
-        $this->serverName = $serverName;
     }
 }

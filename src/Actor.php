@@ -20,6 +20,8 @@ class Actor
     protected $actorList = [];
     private $tempDir;
     private $serverName = 'EasySwoole';
+    private $run = false;
+
 
     function __construct()
     {
@@ -28,9 +30,7 @@ class Actor
 
     public function setServerName(string $serverName): Actor
     {
-        if(!empty($this->actorList)){
-            throw new RuntimeError("can not change ServerName after actor register");
-        }
+        $this->modifyCheck();
         $this->serverName = $serverName;
         return $this;
     }
@@ -38,9 +38,7 @@ class Actor
 
     function setTempDir(string $dir):Actor
     {
-        if(!empty($this->actorList)){
-            throw new RuntimeError("can not change temp dir after actor register");
-        }
+        $this->modifyCheck();
         $this->tempDir = $dir;
         return $this;
     }
@@ -57,7 +55,6 @@ class Actor
             if(in_array($config->getActorName(),$this->actorList)){
                 throw new InvalidActor("actor name for class:{$actorClass} is duplicate");
             }
-            $config->setServerName($this->serverName);
             $this->actorList[$actorClass] = $config;
             return $config;
         }else{
@@ -68,7 +65,7 @@ class Actor
     function client(string $actorClass):?ActorClient
     {
         if(isset($this->actorList[$actorClass])){
-            return new ActorClient($this->actorList[$actorClass],$this->tempDir);
+            return new ActorClient($this->actorList[$actorClass],$this->tempDir,$this->serverName);
         }else{
             return null;
         }
@@ -85,6 +82,7 @@ class Actor
 
     function initProcess():array
     {
+        $this->run = true;
         $processList = [];
         foreach ($this->actorList as $actorClass => $config){
             $subName = "{$this->serverName}.ActorProcess.{$config->getActorName()}";
@@ -100,5 +98,12 @@ class Actor
             }
         }
         return $processList;
+    }
+
+    private function modifyCheck()
+    {
+        if($this->run){
+            throw new RuntimeError('you can not modify configure after init process check');
+        }
     }
 }

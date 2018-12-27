@@ -14,7 +14,7 @@ use EasySwoole\Component\Process\AbstractProcess;
 class ActorProcess extends AbstractProcess
 {
 
-    protected $actorIndex = 1;
+    protected $actorIndex = 1;//index是为了做actorId前缀标记
     protected $actorAtomic = 0;
     protected $processIndex;
     protected $actorClass;
