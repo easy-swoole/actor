@@ -15,19 +15,19 @@ abstract class AbstractActor
 {
     private $hasDoExit = false;
     private $actorId;
-    private $args;
+    private $arg;
     private $channel;
     private $tickList = [];
 
-    final function __construct(string $actorId,$args)
+    final function __construct(string $actorId,$arg)
     {
         $this->actorId = $actorId;
-        $this->args = $args;
+        $this->arg = $arg;
         $this->channel = new Channel(16);
     }
 
     abstract static function configure(ActorConfig $actorConfig);
-    abstract function onStart();
+    abstract function onStart($arg);
     abstract function onMessage($msg);
     abstract function onExit();
     function actorId()
@@ -50,9 +50,9 @@ abstract class AbstractActor
         return swoole_timer_clear($timerId);
     }
 
-    function getArgs()
+    function getArs()
     {
-        return $this->args;
+        return $this->arg;
     }
 
     function getChannel():Channel
@@ -63,7 +63,7 @@ abstract class AbstractActor
     function __run()
     {
         try{
-            $this->onStart();
+            $this->onStart($this->arg);
         }catch (\Throwable $throwable){
             $this->onException($throwable);
         }

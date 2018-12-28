@@ -16,7 +16,7 @@ class RoomActor extends \EasySwoole\Actor\AbstractActor
         $actorConfig->setActorName('RoomActor');
     }
 
-    function onStart()
+    function onStart($arg)
     {
         // TODO: Implement onStart() method.
         var_dump('actorId :'.$this->actorId().' start');
