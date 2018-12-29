@@ -26,9 +26,10 @@ class ActorConfig
     /**
      * @param mixed $actorName
      */
-    public function setActorName($actorName): void
+    public function setActorName($actorName): ActorConfig
     {
         $this->actorName = $actorName;
+        return $this;
     }
 
     /**
@@ -42,9 +43,10 @@ class ActorConfig
     /**
      * @param int $actorProcessNum
      */
-    public function setActorProcessNum(int $actorProcessNum): void
+    public function setActorProcessNum(int $actorProcessNum): ActorConfig
     {
         $this->actorProcessNum = $actorProcessNum;
+        return $this;
     }
 
     /**
@@ -58,8 +60,9 @@ class ActorConfig
     /**
      * @param int $maxActorNum
      */
-    public function setMaxActorNum(int $maxActorNum): void
+    public function setMaxActorNum(int $maxActorNum): ActorConfig
     {
         $this->maxActorNum = $maxActorNum;
+        return $this;
     }
 }
