@@ -50,7 +50,7 @@ abstract class AbstractActor
         return swoole_timer_clear($timerId);
     }
 
-    function getArgs()
+    function getArg()
     {
         return $this->arg;
     }
