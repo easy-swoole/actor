@@ -83,45 +83,24 @@ go(function (){
 ### CLI独立测试Actor逻辑
 ```
 use EasySwoole\Actor\Test\RoomActor;
-use Swoole\Coroutine\Channel;
-use EasySwoole\Actor\Protocol;
+use EasySwoole\Actor\DeveloperTool;
 
 go(function (){
-    $replyChannel = new Channel(2);
-    $actor = new RoomActor('001000001',$replyChannel,[
+    $tool = new DeveloperTool(RoomActor::class,'001000001',[
         'startArg'=>'startArg....'
     ]);
-
-    go(function ()use($replyChannel,$actor){
-        $actor->__run();
+    $tool->onReply(function ($data){
+        var_dump('reply :'.$data);
     });
-
-    go(function ()use($replyChannel){
-       while (1){
-           $replyConn = $replyChannel->pop();
-           fseek($replyConn,0);
-           $data = stream_get_contents($replyConn);
-           if(!empty($data)){
-               $data = Protocol::unpack($data);
-               var_dump(unserialize($data));
-           }
-           fclose($replyConn);
-       }
-    });
-
-    swoole_event_add(STDIN,function ()use($actor){
+    swoole_event_add(STDIN,function ()use($tool){
         $ret = trim(fgets(STDIN));
         if(!empty($ret)){
-            go(function ()use($actor,$ret){
-                $reply = fopen('php://memory','r+');
-                $actor->getChannel()->push([
-                    'msg'=>trim($ret),
-                    'connection'=>$reply,
-                    'reply'=>true
-                ]);
+            go(function ()use($tool,$ret){
+                $tool->send(trim($ret));
             });
         }
     });
+    $tool->run();
 });
 ```
 
