@@ -80,6 +80,51 @@ go(function (){
 });
 ```
 
+### CLI独立测试Actor逻辑
+```
+use EasySwoole\Actor\Test\RoomActor;
+use Swoole\Coroutine\Channel;
+use EasySwoole\Actor\Protocol;
+
+go(function (){
+    $replyChannel = new Channel(2);
+    $actor = new RoomActor('001000001',$replyChannel,[
+        'startArg'=>'startArg....'
+    ]);
+
+    go(function ()use($replyChannel,$actor){
+        $actor->__run();
+    });
+
+    go(function ()use($replyChannel){
+       while (1){
+           $replyConn = $replyChannel->pop();
+           fseek($replyConn,0);
+           $data = stream_get_contents($replyConn);
+           if(!empty($data)){
+               $data = Protocol::unpack($data);
+               var_dump(unserialize($data));
+           }
+           fclose($replyConn);
+       }
+    });
+
+    swoole_event_add(STDIN,function ()use($actor){
+        $ret = trim(fgets(STDIN));
+        if(!empty($ret)){
+            go(function ()use($actor,$ret){
+                $reply = fopen('php://memory','r+');
+                $actor->getChannel()->push([
+                    'msg'=>trim($ret),
+                    'connection'=>$reply,
+                    'reply'=>true
+                ]);
+            });
+        }
+    });
+});
+```
+
 > 注意请基于协程实现，不要在actor中写阻塞代码，否则效率会非常差。其次使用虚拟机,docker等方式开发,不能在共享文件夹使用，因为unixsock 无法在共享目录中正确读写，请修改tempDir临时目录，把unxisock文件挂载在非共享目录即可.
 
 ## 内存问题

@@ -68,10 +68,11 @@ class ActorClient
         return $this->sendAndRecv($command,$timeout,$this->generateSocketByProcessIndex($processIndex));
     }
 
-    function exitAll($timeout = 0.1)
+    function exitAll($arg = null,$timeout = 0.1)
     {
         $command = new Command();
         $command->setCommand('exitAll');
+        $command->setArg($arg);
         return $this->broadcast($command,$timeout);
     }
 
@@ -109,7 +110,10 @@ class ActorClient
             }
             $temp = $channel->pop($timeout);
             if(is_array($temp)){
-                $ret = $ret + $temp;
+                $ret += $temp;
+                if(count($ret) == $allNum){
+                    break;
+                }
             }
         }
         return $ret;
@@ -147,7 +151,7 @@ class ActorClient
     {
         $info = [];
         $channel = new Channel($this->actorConfig->getActorProcessNum()+1);
-        for ($i = 0;$i < $this->actorConfig->getActorProcessNum();$i++){
+        for ($i = 1;$i <= $this->actorConfig->getActorProcessNum();$i++){
             go(function ()use($command,$channel,$i,$timeout){
                 $ret = $this->sendAndRecv($command,$timeout,$this->generateSocketByProcessIndex($i));
                 $channel->push([
@@ -163,6 +167,9 @@ class ActorClient
             $temp = $channel->pop($timeout);
             if(is_array($temp)){
                 $info += $temp;
+                if(count($info) == $this->actorConfig->getActorProcessNum()){
+                    break;
+                }
             }
         }
         return $info;

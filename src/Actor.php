@@ -22,7 +22,6 @@ class Actor
     private $serverName = 'EasySwoole';
     private $run = false;
 
-
     function __construct()
     {
         $this->tempDir = getcwd();
@@ -86,7 +85,7 @@ class Actor
         $processList = [];
         foreach ($this->actorList as $actorClass => $config){
             $subName = "{$this->serverName}.ActorProcess.{$config->getActorName()}";
-            for($i = 0;$i < $config->getActorProcessNum();$i++){
+            for($i = 1;$i <= $config->getActorProcessNum();$i++){
                 $processConfig = new ProcessConfig();
                 $processConfig->setActorClass($actorClass);
                 $processConfig->setTempDir($this->tempDir);

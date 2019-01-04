@@ -19,15 +19,15 @@ class RoomActor extends \EasySwoole\Actor\AbstractActor
     function onStart($arg)
     {
         // TODO: Implement onStart() method.
-        var_dump('actorId :'.$this->actorId().' start');
+        var_dump('actorId :'.$this->actorId().' start',$arg);
     }
 
     function onMessage($msg)
     {
         // TODO: Implement onMessage() method.
         var_dump('actorId :'.$this->actorId().' recv '.$msg);
-        //如果需要回复，则
-        return 'hello from '.$this->actorId();
+        //如果需要回复，则return
+        return "you say : $msg";
     }
 
     function onExit($arg)

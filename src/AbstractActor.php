@@ -18,12 +18,14 @@ abstract class AbstractActor
     private $arg;
     private $channel;
     private $tickList = [];
+    private $replyChannel;
 
-    final function __construct(string $actorId,$arg)
+    final function __construct(string $actorId,Channel $replyChannel,$arg)
     {
         $this->actorId = $actorId;
         $this->arg = $arg;
         $this->channel = new Channel(16);
+        $this->replyChannel = $replyChannel;
     }
 
     abstract static function configure(ActorConfig $actorConfig);
@@ -68,8 +70,8 @@ abstract class AbstractActor
             $this->onException($throwable);
         }
         while (!$this->hasDoExit){
-            $array = $this->channel->pop(0.1);
-            if(!empty($array)){
+            $array = $this->channel->pop();
+            if(is_array($array)){
                 $msg = $array['msg'];
                 if($msg == 'exit'){
                     $reply = $this->exitHandler($array['arg']);
@@ -79,7 +81,7 @@ abstract class AbstractActor
                 if($array['reply']){
                     $conn = $array['connection'];
                     fwrite($conn,Protocol::pack(serialize($reply)));
-                    fclose($conn);
+                    $this->replyChannel->push($conn);
                 }
             }
         }
