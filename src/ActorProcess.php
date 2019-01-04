@@ -84,10 +84,27 @@ class ActorProcess extends AbstractProcess
                                                         'msg'=>$args['msg'],
                                                         'reply'=>true
                                                     ]);
-                                                    if($args['msg'] == 'exit'){
-                                                        $this->actorAtomic--;
-                                                        unset($this->actorList[$actorId]);
-                                                    }
+                                                    break;
+                                                }
+                                            }
+                                            fwrite($conn,Protocol::pack(serialize(null)));
+                                            fclose($conn);
+                                            break;
+                                        }
+                                        case 'exit':{
+                                            $args = $fromPackage->getArg();
+                                            if(isset($args['actorId'])){
+                                                $actorId = $args['actorId'];
+                                                if(isset($this->actorList[$actorId])){
+                                                    //消息回复在actor中
+                                                    $this->actorList[$actorId]->getChannel()->push([
+                                                        'connection'=>$conn,
+                                                        'msg'=>'exit',
+                                                        'arg'=>$args['msg'],//单独多出arg字段
+                                                        'reply'=>true
+                                                    ]);
+                                                    $this->actorAtomic--;
+                                                    unset($this->actorList[$actorId]);
                                                     break;
                                                 }
                                             }
@@ -103,7 +120,8 @@ class ActorProcess extends AbstractProcess
                                         case 'exitAll':{
                                             $this->actorAtomic = 0;
                                             foreach ($this->actorList as $actorId => $item){
-                                                $item->getChannel()->push(['msg'=>'exit','reply'=>false]);
+                                                //单独多出arg字段
+                                                $item->getChannel()->push(['msg'=>'exit','reply'=>false,'arg'=>null]);
                                                 unset($this->actorList[$actorId]);
                                             }
                                             fwrite($conn,Protocol::pack(serialize(true)));

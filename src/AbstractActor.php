@@ -29,7 +29,7 @@ abstract class AbstractActor
     abstract static function configure(ActorConfig $actorConfig);
     abstract function onStart($arg);
     abstract function onMessage($msg);
-    abstract function onExit();
+    abstract function onExit($arg);
     function actorId()
     {
         return $this->actorId;
@@ -72,7 +72,7 @@ abstract class AbstractActor
             if(!empty($array)){
                 $msg = $array['msg'];
                 if($msg == 'exit'){
-                    $reply = $this->exitHandler();
+                    $reply = $this->exitHandler($array['arg']);
                 }else{
                     $reply = $this->onMessage($msg);
                 }
@@ -88,15 +88,16 @@ abstract class AbstractActor
     /*
      * 一个actor可以自杀
      */
-    protected function exit()
+    protected function exit($arg = null)
     {
         $this->channel->push([
             'msg'=>'exit',
-            'reply'=>false
+            'reply'=>false,
+            'arg'=>$arg
         ]);
     }
 
-    private function exitHandler()
+    private function exitHandler($arg)
     {
         $reply = null;
         try{
@@ -106,7 +107,7 @@ abstract class AbstractActor
             }
             $this->hasDoExit = true;
             $this->channel->close();
-            $reply = $this->onExit();
+            $reply = $this->onExit($arg);
             if($reply === null){
                 $reply = true;
             }

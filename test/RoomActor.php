@@ -30,10 +30,10 @@ class RoomActor extends \EasySwoole\Actor\AbstractActor
         return 'hello from '.$this->actorId();
     }
 
-    function onExit()
+    function onExit($arg)
     {
         // TODO: Implement onExit() method.
-        var_dump('actorId :'.$this->actorId().' exit');
+        var_dump('actorId :'.$this->actorId().' exit and exit arg is '.$arg);
     }
 
     protected function onException(\Throwable $throwable)

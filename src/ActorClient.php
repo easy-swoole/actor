@@ -56,9 +56,16 @@ class ActorClient
         }
     }
 
-    function exit(string $actorId,$timeout = 0.1)
+    function exit(string $actorId,$arg = null,$timeout = 0.1)
     {
-        return $this->push($actorId,'exit',$timeout);
+        $processIndex = self::actorIdToProcessIndex($actorId);
+        $command = new Command();
+        $command->setCommand('exit');
+        $command->setArg([
+            'actorId'=>$actorId,
+            'msg'=>$arg
+        ]);
+        return $this->sendAndRecv($command,$timeout,$this->generateSocketByProcessIndex($processIndex));
     }
 
     function exitAll($timeout = 0.1)
