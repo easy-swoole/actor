@@ -24,7 +24,7 @@ class DeveloperTool
         $this->actor = new $actorClass($actorId,$this->replyChannel,$actorArg);
     }
 
-    function send($msg)
+    function push($msg)
     {
         $reply = fopen('php://memory','r+');
         $this->actor->getChannel()->push([

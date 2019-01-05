@@ -96,7 +96,7 @@ go(function (){
         $ret = trim(fgets(STDIN));
         if(!empty($ret)){
             go(function ()use($tool,$ret){
-                $tool->send(trim($ret));
+                $tool->push(trim($ret));
             });
         }
     });
