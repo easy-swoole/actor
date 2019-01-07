@@ -83,11 +83,9 @@ class ActorProcess extends AbstractProcess
                                     $this->actorIndex++;
                                     $this->actorAtomic++;
                                     try{
-                                        go(function ()use($actorId,$fromPackage){
-                                            $actor = new $this->actorClass($actorId,$this->replyChannel,$fromPackage->getArg());
-                                            $this->actorList[$actorId] = $actor;
-                                            $actor->__run();
-                                        });
+                                        $actor = new $this->actorClass($actorId,$this->replyChannel,$fromPackage->getArg());
+                                        $this->actorList[$actorId] = $actor;
+                                        $actor->__run();
                                     }catch (\Throwable $throwable){
                                         $this->actorAtomic--;
                                         unset($this->actorList[$actorId]);

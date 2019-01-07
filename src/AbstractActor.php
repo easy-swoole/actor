@@ -64,27 +64,31 @@ abstract class AbstractActor
 
     function __run()
     {
-        try{
-            $this->onStart($this->arg);
-        }catch (\Throwable $throwable){
-            $this->onException($throwable);
-        }
-        while (!$this->hasDoExit){
-            $array = $this->channel->pop();
-            if(is_array($array)){
-                $msg = $array['msg'];
-                if($msg == 'exit'){
-                    $reply = $this->exitHandler($array['arg']);
-                }else{
-                    $reply = $this->onMessage($msg);
-                }
-                if($array['reply']){
-                    $conn = $array['connection'];
-                    fwrite($conn,Protocol::pack(serialize($reply)));
-                    $this->replyChannel->push($conn);
+        go(function (){
+            try{
+                $this->onStart($this->arg);
+            }catch (\Throwable $throwable){
+                $this->onException($throwable);
+            }
+        });
+        go(function (){
+            while (!$this->hasDoExit){
+                $array = $this->channel->pop();
+                if(is_array($array)){
+                    $msg = $array['msg'];
+                    if($msg == 'exit'){
+                        $reply = $this->exitHandler($array['arg']);
+                    }else{
+                        $reply = $this->onMessage($msg);
+                    }
+                    if($array['reply']){
+                        $conn = $array['connection'];
+                        fwrite($conn,Protocol::pack(serialize($reply)));
+                        $this->replyChannel->push($conn);
+                    }
                 }
             }
-        }
+        });
     }
 
     /*
