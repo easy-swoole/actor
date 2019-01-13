@@ -83,7 +83,7 @@ abstract class AbstractActor
                     }
                     if($array['reply']){
                         $conn = $array['connection'];
-                        fwrite($conn,Protocol::pack(serialize($reply)));
+                        $conn->send(Protocol::pack(serialize($reply)));
                         $this->replyChannel->push($conn);
                     }
                 }
