@@ -49,7 +49,8 @@ class ActorProcess extends AbstractProcess
                 {
                     unlink($sockFile);
                 }
-                $socket = stream_socket_server("unix://$sockFile", $errno, $errStr);
+                $ctx = stream_context_create(['socket' => ['so_reuseaddr' => true, 'backlog' => $processConfig->getBacklog()]]);
+                $socket = stream_socket_server("unix://$sockFile", $errno, $errStr,STREAM_SERVER_BIND | STREAM_SERVER_LISTEN,$ctx);
                 if (!$socket)
                 {
                     trigger_error($errStr);

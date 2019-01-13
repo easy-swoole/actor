@@ -15,6 +15,7 @@ class ProcessConfig
     protected $tempDir;
     protected $actorClass;
     protected $processName;
+    protected $backlog;
 
     /**
      * @return mixed
@@ -78,6 +79,22 @@ class ProcessConfig
     public function setProcessName($processName): void
     {
         $this->processName = $processName;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBacklog(): int
+    {
+        return $this->backlog;
+    }
+
+    /**
+     * @param int $backlog
+     */
+    public function setBacklog(int $backlog): void
+    {
+        $this->backlog = $backlog;
     }
 
 }

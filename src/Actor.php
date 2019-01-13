@@ -21,7 +21,7 @@ class Actor
     private $tempDir;
     private $serverName = 'EasySwoole';
     private $run = false;
-
+    private $backlog = 256;
     function __construct()
     {
         $this->tempDir = getcwd();
@@ -31,6 +31,15 @@ class Actor
     {
         $this->modifyCheck();
         $this->serverName = $serverName;
+        return $this;
+    }
+
+    public function setBacklog(?int $backlog = null)
+    {
+        $this->modifyCheck();
+        if($backlog != null){
+            $this->backlog = $backlog;
+        }
         return $this;
     }
 
@@ -92,6 +101,7 @@ class Actor
                 $finaleName = "{$subName}.{$i}";
                 $processConfig->setIndex($i);
                 $processConfig->setProcessName($finaleName);
+                $processConfig->setBacklog($this->backlog);
                 $process = new ActorProcess($finaleName,$processConfig);
                 $processList[] = $process;
             }

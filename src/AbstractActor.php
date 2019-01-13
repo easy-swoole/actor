@@ -24,7 +24,7 @@ abstract class AbstractActor
     {
         $this->actorId = $actorId;
         $this->arg = $arg;
-        $this->channel = new Channel(16);
+        $this->channel = new Channel(64);
         $this->replyChannel = $replyChannel;
     }
 
