@@ -14,6 +14,7 @@ class ActorConfig
     protected $actorName;
     protected $actorProcessNum = 3;
     protected $maxActorNum = 10000;
+    protected $backlog = 256;
 
     /**
      * @return mixed
@@ -64,5 +65,21 @@ class ActorConfig
     {
         $this->maxActorNum = $maxActorNum;
         return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBacklog(): int
+    {
+        return $this->backlog;
+    }
+
+    /**
+     * @param int $backlog
+     */
+    public function setBacklog(int $backlog): void
+    {
+        $this->backlog = $backlog;
     }
 }
