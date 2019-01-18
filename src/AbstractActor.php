@@ -19,11 +19,11 @@ abstract class AbstractActor
     private $channel;
     private $tickList = [];
     private $replyChannel;
-    private $blockModel = false;
+    private $block = false;
 
-    function setBlockModel(bool $bool)
+    function setBlock(bool $bool)
     {
-        $this->blockModel = $bool;
+        $this->block = $bool;
     }
 
     final function __construct(string $actorId,Channel $replyChannel,$arg)
@@ -70,7 +70,7 @@ abstract class AbstractActor
 
     function __run()
     {
-        if($this->blockModel){
+        if($this->block){
             go(function (){
                 try{
                     $this->onStart($this->arg);
