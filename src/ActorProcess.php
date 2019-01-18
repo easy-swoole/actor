@@ -36,6 +36,7 @@ class ActorProcess extends AbstractProcess
         $this->config = $processConfig;
         /** @var $processConfig ProcessConfig */
         \Swoole\Runtime::enableCoroutine(true);
+        \co::set(['max_coroutine' => 100000]);
         $this->processIndex = str_pad($processConfig->getIndex(),3,'0',STR_PAD_LEFT);
         $this->actorClass = $processConfig->getActorClass();
         go(function (){
