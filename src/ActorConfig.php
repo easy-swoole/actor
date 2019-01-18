@@ -24,6 +24,8 @@ class ActorConfig
      */
     protected $onShutdown;
 
+    protected $blockModel = false;
+
     /**
      * @return mixed
      */
@@ -114,5 +116,21 @@ class ActorConfig
     public function setOnShutdown(?callable $onShutdown): void
     {
         $this->onShutdown = $onShutdown;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isBlockModel(): bool
+    {
+        return $this->blockModel;
+    }
+
+    /**
+     * @param bool $blockModel
+     */
+    public function setBlockModel(bool $blockModel): void
+    {
+        $this->blockModel = $blockModel;
     }
 }

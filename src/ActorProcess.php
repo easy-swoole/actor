@@ -93,7 +93,9 @@ class ActorProcess extends AbstractProcess
                                 $this->actorIndex++;
                                 $this->actorAtomic++;
                                 try{
+                                    /** @var  $actor AbstractActor*/
                                     $actor = new $this->actorClass($actorId,$this->replyChannel,$fromPackage->getArg());
+                                    $actor->setBlockModel($this->config->isBlockModel());
                                     $this->actorList[$actorId] = $actor;
                                     $actor->__run();
                                 }catch (\Throwable $throwable){

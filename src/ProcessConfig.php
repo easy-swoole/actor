@@ -16,6 +16,7 @@ class ProcessConfig
     protected $actorClass;
     protected $processName;
     protected $backlog;
+    protected $blockModel = false;
     /**
      * @var $onStart callable
      */
@@ -135,5 +136,21 @@ class ProcessConfig
     public function setOnShutdown(?callable $onShutdown): void
     {
         $this->onShutdown = $onShutdown;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isBlockModel(): bool
+    {
+        return $this->blockModel;
+    }
+
+    /**
+     * @param bool $blockModel
+     */
+    public function setBlockModel(bool $blockModel): void
+    {
+        $this->blockModel = $blockModel;
     }
 }

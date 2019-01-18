@@ -95,6 +95,7 @@ class Actor
                 $processConfig->setBacklog($config->getBacklog());
                 $processConfig->setOnStart($config->getOnStart());
                 $processConfig->setOnShutdown($config->getOnShutdown());
+                $processConfig->setBlockModel($config->isBlockModel());
                 $process = new ActorProcess($finaleName,$processConfig);
                 $processList[] = $process;
             }
