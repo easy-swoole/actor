@@ -15,6 +15,14 @@ class ActorConfig
     protected $actorProcessNum = 3;
     protected $maxActorNum = 10000;
     protected $backlog = 256;
+    /**
+     * @var $onStart callable
+     */
+    protected $onStart;
+    /**
+     * @var $onShutdown callable
+     */
+    protected $onShutdown;
 
     /**
      * @return mixed
@@ -24,9 +32,6 @@ class ActorConfig
         return $this->actorName;
     }
 
-    /**
-     * @param mixed $actorName
-     */
     public function setActorName($actorName): ActorConfig
     {
         $this->actorName = $actorName;
@@ -41,9 +46,7 @@ class ActorConfig
         return $this->actorProcessNum;
     }
 
-    /**
-     * @param int $actorProcessNum
-     */
+
     public function setActorProcessNum(int $actorProcessNum): ActorConfig
     {
         $this->actorProcessNum = $actorProcessNum;
@@ -58,9 +61,7 @@ class ActorConfig
         return $this->maxActorNum;
     }
 
-    /**
-     * @param int $maxActorNum
-     */
+
     public function setMaxActorNum(int $maxActorNum): ActorConfig
     {
         $this->maxActorNum = $maxActorNum;
@@ -81,5 +82,37 @@ class ActorConfig
     public function setBacklog(int $backlog): void
     {
         $this->backlog = $backlog;
+    }
+
+    /**
+     * @return callable
+     */
+    public function getOnStart(): ?callable
+    {
+        return $this->onStart;
+    }
+
+    /**
+     * @param callable $onStart
+     */
+    public function setOnStart(?callable $onStart): void
+    {
+        $this->onStart = $onStart;
+    }
+
+    /**
+     * @return callable
+     */
+    public function getOnShutdown(): ?callable
+    {
+        return $this->onShutdown;
+    }
+
+    /**
+     * @param callable $onShutdown
+     */
+    public function setOnShutdown(?callable $onShutdown): void
+    {
+        $this->onShutdown = $onShutdown;
     }
 }

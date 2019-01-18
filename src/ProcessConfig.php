@@ -16,6 +16,14 @@ class ProcessConfig
     protected $actorClass;
     protected $processName;
     protected $backlog;
+    /**
+     * @var $onStart callable
+     */
+    protected $onStart;
+    /**
+     * @var $onShutdown callable
+     */
+    protected $onShutdown;
 
     /**
      * @return mixed
@@ -97,4 +105,35 @@ class ProcessConfig
         $this->backlog = $backlog;
     }
 
+    /**
+     * @return callable
+     */
+    public function getOnStart(): ?callable
+    {
+        return $this->onStart;
+    }
+
+    /**
+     * @param callable $onStart
+     */
+    public function setOnStart(?callable $onStart): void
+    {
+        $this->onStart = $onStart;
+    }
+
+    /**
+     * @return callable
+     */
+    public function getOnShutdown(): ?callable
+    {
+        return $this->onShutdown;
+    }
+
+    /**
+     * @param callable $onShutdown
+     */
+    public function setOnShutdown(?callable $onShutdown): void
+    {
+        $this->onShutdown = $onShutdown;
+    }
 }

@@ -93,6 +93,8 @@ class Actor
                 $processConfig->setIndex($i);
                 $processConfig->setProcessName($finaleName);
                 $processConfig->setBacklog($config->getBacklog());
+                $processConfig->setOnStart($config->getOnStart());
+                $processConfig->setOnShutdown($config->getOnShutdown());
                 $process = new ActorProcess($finaleName,$processConfig);
                 $processList[] = $process;
             }

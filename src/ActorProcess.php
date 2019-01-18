@@ -25,14 +25,24 @@ class ActorProcess extends AbstractProcess
      * @var $replyChannel Channel
      */
     protected $replyChannel;
+    /**
+     * @var $config ProcessConfig
+     */
+    protected $config;
 
     public function run($processConfig)
     {
         // TODO: Implement run() method.
+        $this->config = $processConfig;
         /** @var $processConfig ProcessConfig */
         \Swoole\Runtime::enableCoroutine(true);
         $this->processIndex = str_pad($processConfig->getIndex(),3,'0',STR_PAD_LEFT);
         $this->actorClass = $processConfig->getActorClass();
+        go(function (){
+            if($this->config->getOnStart()){
+                call_user_func($this->config->getOnStart(),$this);
+            }
+        });
         go(function ()use($processConfig){
             /*
              * 一个进程最多同时存在1024*32个客户端请求回复
@@ -184,6 +194,11 @@ class ActorProcess extends AbstractProcess
     public function onShutDown()
     {
         // TODO: Implement onShutDown() method.
+        go(function (){
+            if($this->config->getOnShutdown()){
+                call_user_func($this->config->getOnShutdown(),$this);
+            }
+        });
     }
 
     public function onReceive(string $str)
@@ -191,4 +206,83 @@ class ActorProcess extends AbstractProcess
         // TODO: Implement onReceive() method.
     }
 
+    /**
+     * @return int
+     */
+    public function getActorIndex(): int
+    {
+        return $this->actorIndex;
+    }
+
+    /**
+     * @param int $actorIndex
+     */
+    public function setActorIndex(int $actorIndex): void
+    {
+        $this->actorIndex = $actorIndex;
+    }
+
+    /**
+     * @return int
+     */
+    public function getActorAtomic(): int
+    {
+        return $this->actorAtomic;
+    }
+
+    /**
+     * @param int $actorAtomic
+     */
+    public function setActorAtomic(int $actorAtomic): void
+    {
+        $this->actorAtomic = $actorAtomic;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getProcessIndex()
+    {
+        return $this->processIndex;
+    }
+
+    /**
+     * @param mixed $processIndex
+     */
+    public function setProcessIndex($processIndex): void
+    {
+        $this->processIndex = $processIndex;
+    }
+
+    /**
+     * @return array
+     */
+    public function getActorList(): array
+    {
+        return $this->actorList;
+    }
+
+    /**
+     * @param array $actorList
+     */
+    public function setActorList(array $actorList): void
+    {
+        $this->actorList = $actorList;
+    }
+
+    /**
+     * @return ProcessConfig
+     */
+    public function getConfig(): ProcessConfig
+    {
+        return $this->config;
+    }
+
+    /**
+     * @param ProcessConfig $config
+     */
+    public function setConfig(ProcessConfig $config): void
+    {
+        $this->config = $config;
+    }
 }
