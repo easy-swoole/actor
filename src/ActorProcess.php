@@ -41,13 +41,21 @@ class ActorProcess extends AbstractProcess
         $this->actorClass = $processConfig->getActorClass();
         if($processConfig->getTick() > 0 && is_callable($processConfig->getOnTick())){
             $this->addTick($processConfig->getTick(),function ()use($processConfig){
-                call_user_func($processConfig->getOnTick(),$this);
+                try{
+                    call_user_func($processConfig->getOnTick(),$this);
+                }catch (\Throwable $throwable){
+                    $this->onException($throwable);
+                }
             });
         }
         go(function ()use($processConfig){
             $this->replyChannel = new Channel(1024*32);
             if($this->config->getOnStart()){
-                call_user_func($this->config->getOnStart(),$this);
+                try{
+                    call_user_func($this->config->getOnStart(),$this);
+                }catch (\Throwable $throwable){
+                    $this->onException($throwable);
+                }
             }
             /*
              * 一个进程最多同时存在1024*32个客户端请求回复
@@ -200,15 +208,16 @@ class ActorProcess extends AbstractProcess
 
     public function onShutDown()
     {
-        // TODO: Implement onShutDown() method.
-        if($this->config->getOnShutdown()){
+        try{
             call_user_func($this->config->getOnShutdown(),$this);
+        }catch (\Throwable $throwable){
+            $this->onException($throwable);
         }
     }
 
     public function onReceive(string $str)
     {
-        // TODO: Implement onReceive() method.
+
     }
 
     protected function onException(\Throwable $throwable)
