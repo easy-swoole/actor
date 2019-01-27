@@ -105,6 +105,7 @@ class ActorProcess extends AbstractProcess
                                     $this->actorAtomic--;
                                     unset($this->actorList[$actorId]);
                                     $actorId = null;
+                                    $this->onException($throwable);
                                 }
                                 $conn->send(Protocol::pack(serialize($actorId)));
                                 $this->replyChannel->push($conn);
@@ -208,6 +209,15 @@ class ActorProcess extends AbstractProcess
     public function onReceive(string $str)
     {
         // TODO: Implement onReceive() method.
+    }
+
+    protected function onException(\Throwable $throwable)
+    {
+        if(is_callable($this->config->getProcessOnException())){
+            call_user_func($this->config->getProcessOnException(),$throwable);
+        }else{
+            parent::onException($throwable);
+        }
     }
 
     public function status()

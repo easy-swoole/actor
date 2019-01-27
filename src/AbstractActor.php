@@ -54,7 +54,13 @@ abstract class AbstractActor extends SplBean
      */
     function tick($time,callable $callback)
     {
-        $id = swoole_timer_tick($time,$callback);
+        $id = swoole_timer_tick($time,function ()use($callback){
+            try{
+                call_user_func($callback);
+            }catch (\Throwable $throwable){
+                $this->onException($throwable);
+            }
+        });
         $this->tickList[$id] = $id;
     }
 
@@ -161,7 +167,11 @@ abstract class AbstractActor extends SplBean
                     if($msg == 'exit'){
                         $reply = $this->exitHandler($array['arg']);
                     }else{
-                        $reply = $this->onMessage($msg);
+                        try{
+                            $reply = $this->onMessage($msg);
+                        }catch (\Throwable $throwable){
+                            $this->onException($throwable);
+                        }
                     }
                     if($array['reply']){
                         $conn = $array['connection'];

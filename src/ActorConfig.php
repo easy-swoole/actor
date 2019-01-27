@@ -30,6 +30,8 @@ class ActorConfig
 
     protected $onTick;
 
+    protected $processOnException;
+
     /**
      * @return mixed
      */
@@ -168,5 +170,21 @@ class ActorConfig
     public function setOnTick($onTick): void
     {
         $this->onTick = $onTick;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getProcessOnException()
+    {
+        return $this->processOnException;
+    }
+
+    /**
+     * @param mixed $processOnException
+     */
+    public function setProcessOnException($processOnException): void
+    {
+        $this->processOnException = $processOnException;
     }
 }

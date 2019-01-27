@@ -98,6 +98,7 @@ class Actor
                 $processConfig->setBlock($config->isBlock());
                 $processConfig->setOnTick($config->getOnTick());
                 $processConfig->setTick($config->getTick());
+                $processConfig->setProcessOnException($config->getProcessOnException());
                 $process = new ActorProcess($finaleName,$processConfig);
                 $processList[] = $process;
             }
