@@ -26,6 +26,10 @@ class ActorConfig
 
     protected $block = false;
 
+    protected $tick = 0;
+
+    protected $onTick;
+
     /**
      * @return mixed
      */
@@ -132,5 +136,37 @@ class ActorConfig
     public function setBlock(bool $block): void
     {
         $this->block = $block;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTick(): int
+    {
+        return $this->tick;
+    }
+
+    /**
+     * @param int $tick
+     */
+    public function setTick(int $tick): void
+    {
+        $this->tick = $tick;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getOnTick()
+    {
+        return $this->onTick;
+    }
+
+    /**
+     * @param mixed $onTick
+     */
+    public function setOnTick($onTick): void
+    {
+        $this->onTick = $onTick;
     }
 }

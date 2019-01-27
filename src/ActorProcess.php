@@ -39,16 +39,19 @@ class ActorProcess extends AbstractProcess
         \co::set(['max_coroutine' => 100000]);
         $this->processIndex = str_pad($processConfig->getIndex(),3,'0',STR_PAD_LEFT);
         $this->actorClass = $processConfig->getActorClass();
-        go(function (){
+        if($processConfig->getTick() > 0 && is_callable($processConfig->getOnTick())){
+            $this->addTick($processConfig->getTick(),function ()use($processConfig){
+                call_user_func($processConfig->getOnTick(),$this);
+            });
+        }
+        go(function ()use($processConfig){
+            $this->replyChannel = new Channel(1024*32);
             if($this->config->getOnStart()){
                 call_user_func($this->config->getOnStart(),$this);
             }
-        });
-        go(function ()use($processConfig){
             /*
              * 一个进程最多同时存在1024*32个客户端请求回复
-             */
-            $this->replyChannel = new Channel(1024*32);
+            */
             go(function (){
                 while (1){
                     $connection = $this->replyChannel->pop();
@@ -94,10 +97,10 @@ class ActorProcess extends AbstractProcess
                                 $this->actorAtomic++;
                                 try{
                                     /** @var  $actor AbstractActor*/
-                                    $actor = new $this->actorClass($actorId,$this->replyChannel,$fromPackage->getArg());
-                                    $actor->setBlock($this->config->isBlock());
+                                    $actor = new $this->actorClass();
+                                    $actor->setBlock($this->config->isBlock())->setActorId($actorId)->setArg($fromPackage->getArg());
                                     $this->actorList[$actorId] = $actor;
-                                    $actor->__run();
+                                    $actor->__startUp($this->replyChannel);
                                 }catch (\Throwable $throwable){
                                     $this->actorAtomic--;
                                     unset($this->actorList[$actorId]);
@@ -197,11 +200,9 @@ class ActorProcess extends AbstractProcess
     public function onShutDown()
     {
         // TODO: Implement onShutDown() method.
-        go(function (){
-            if($this->config->getOnShutdown()){
-                call_user_func($this->config->getOnShutdown(),$this);
-            }
-        });
+        if($this->config->getOnShutdown()){
+            call_user_func($this->config->getOnShutdown(),$this);
+        }
     }
 
     public function onReceive(string $str)
@@ -209,83 +210,30 @@ class ActorProcess extends AbstractProcess
         // TODO: Implement onReceive() method.
     }
 
-    /**
-     * @return int
-     */
-    public function getActorIndex(): int
+    public function status()
     {
-        return $this->actorIndex;
+        return [
+            'actorIndex'=>$this->actorIndex,
+            'actorAtomic'=>$this->actorAtomic,
+            'actorList'=>$this->actorList,
+            'processIndex'=>$this->processIndex
+        ];
     }
 
-    /**
-     * @param int $actorIndex
-     */
-    public function setActorIndex(int $actorIndex): void
+    public function setStatus(array $status)
     {
-        $this->actorIndex = $actorIndex;
+        if(isset($status['actorIndex'])){
+            $this->actorIndex = $status['actorIndex'];
+        }
+        if(isset($status['actorAtomic'])){
+            $this->actorAtomic = $status['actorAtomic'];
+        }
     }
 
-    /**
-     * @return int
-     */
-    public function getActorAtomic(): int
+    public function wakeUpActor(AbstractActor $actor)
     {
-        return $this->actorAtomic;
+        $this->actorList[$actor->actorId()] = $actor;
+        $actor->wakeUp($this->replyChannel);
     }
 
-    /**
-     * @param int $actorAtomic
-     */
-    public function setActorAtomic(int $actorAtomic): void
-    {
-        $this->actorAtomic = $actorAtomic;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getProcessIndex()
-    {
-        return $this->processIndex;
-    }
-
-    /**
-     * @param mixed $processIndex
-     */
-    public function setProcessIndex($processIndex): void
-    {
-        $this->processIndex = $processIndex;
-    }
-
-    /**
-     * @return array
-     */
-    public function getActorList(): array
-    {
-        return $this->actorList;
-    }
-
-    /**
-     * @param array $actorList
-     */
-    public function setActorList(array $actorList): void
-    {
-        $this->actorList = $actorList;
-    }
-
-    /**
-     * @return ProcessConfig
-     */
-    public function getConfig(): ProcessConfig
-    {
-        return $this->config;
-    }
-
-    /**
-     * @param ProcessConfig $config
-     */
-    public function setConfig(ProcessConfig $config): void
-    {
-        $this->config = $config;
-    }
 }

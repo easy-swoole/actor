@@ -9,22 +9,12 @@
 namespace EasySwoole\Actor;
 
 
-class ProcessConfig
+class ProcessConfig extends ActorConfig
 {
     protected $index;
     protected $tempDir;
     protected $actorClass;
     protected $processName;
-    protected $backlog;
-    protected $block = false;
-    /**
-     * @var $onStart callable
-     */
-    protected $onStart;
-    /**
-     * @var $onShutdown callable
-     */
-    protected $onShutdown;
 
     /**
      * @return mixed
@@ -88,69 +78,5 @@ class ProcessConfig
     public function setProcessName($processName): void
     {
         $this->processName = $processName;
-    }
-
-    /**
-     * @return int
-     */
-    public function getBacklog(): int
-    {
-        return $this->backlog;
-    }
-
-    /**
-     * @param int $backlog
-     */
-    public function setBacklog(int $backlog): void
-    {
-        $this->backlog = $backlog;
-    }
-
-    /**
-     * @return callable
-     */
-    public function getOnStart(): ?callable
-    {
-        return $this->onStart;
-    }
-
-    /**
-     * @param callable $onStart
-     */
-    public function setOnStart(?callable $onStart): void
-    {
-        $this->onStart = $onStart;
-    }
-
-    /**
-     * @return callable
-     */
-    public function getOnShutdown(): ?callable
-    {
-        return $this->onShutdown;
-    }
-
-    /**
-     * @param callable $onShutdown
-     */
-    public function setOnShutdown(?callable $onShutdown): void
-    {
-        $this->onShutdown = $onShutdown;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isBlock(): bool
-    {
-        return $this->block;
-    }
-
-    /**
-     * @param bool $block
-     */
-    public function setBlock(bool $block): void
-    {
-        $this->block = $block;
     }
 }

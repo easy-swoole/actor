@@ -9,38 +9,44 @@
 namespace EasySwoole\Actor;
 
 
+use EasySwoole\Spl\SplBean;
 use Swoole\Coroutine\Channel;
 
-abstract class AbstractActor
+abstract class AbstractActor extends SplBean
 {
-    private $hasDoExit = false;
-    private $actorId;
-    private $arg;
+    protected $hasDoExit = false;
+    protected $actorId;
+    protected $arg;
     private $channel;
     private $tickList = [];
     private $replyChannel;
-    private $block = false;
+    protected $block = false;
+
+    function __construct(array $data = null, bool $autoCreateProperty = false)
+    {
+        parent::__construct($data, $autoCreateProperty);
+    }
 
     function setBlock(bool $bool)
     {
         $this->block = $bool;
-    }
-
-    final function __construct(string $actorId,Channel $replyChannel,$arg)
-    {
-        $this->actorId = $actorId;
-        $this->arg = $arg;
-        $this->channel = new Channel(64);
-        $this->replyChannel = $replyChannel;
+        return $this;
     }
 
     abstract static function configure(ActorConfig $actorConfig);
     abstract function onStart($arg);
     abstract function onMessage($msg);
     abstract function onExit($arg);
+
     function actorId()
     {
         return $this->actorId;
+    }
+
+    function setActorId($id)
+    {
+        $this->actorId = $id;
+        return $this;
     }
 
     /*
@@ -63,36 +69,29 @@ abstract class AbstractActor
         return $this->arg;
     }
 
-    function getChannel():Channel
+    function setArg($arg)
+    {
+        $this->arg = $arg;
+        return $this;
+    }
+
+    function getChannel():?Channel
     {
         return $this->channel;
     }
 
-    function __run()
+    function __startUp(Channel $replyChannel)
     {
+        $this->channel = new Channel(64);
+        $this->replyChannel = $replyChannel;
         if($this->block){
-            go(function (){
+            go(function ()use($replyChannel){
                 try{
                     $this->onStart($this->arg);
                 }catch (\Throwable $throwable){
                     $this->onException($throwable);
                 }
-                while (!$this->hasDoExit){
-                    $array = $this->channel->pop();
-                    if(is_array($array)){
-                        $msg = $array['msg'];
-                        if($msg == 'exit'){
-                            $reply = $this->exitHandler($array['arg']);
-                        }else{
-                            $reply = $this->onMessage($msg);
-                        }
-                        if($array['reply']){
-                            $conn = $array['connection'];
-                            $conn->send(Protocol::pack(serialize($reply)));
-                            $this->replyChannel->push($conn);
-                        }
-                    }
-                }
+                $this->listen();
             });
         }else{
             go(function (){
@@ -102,24 +101,7 @@ abstract class AbstractActor
                     $this->onException($throwable);
                 }
             });
-            go(function (){
-                while (!$this->hasDoExit){
-                    $array = $this->channel->pop();
-                    if(is_array($array)){
-                        $msg = $array['msg'];
-                        if($msg == 'exit'){
-                            $reply = $this->exitHandler($array['arg']);
-                        }else{
-                            $reply = $this->onMessage($msg);
-                        }
-                        if($array['reply']){
-                            $conn = $array['connection'];
-                            $conn->send(Protocol::pack(serialize($reply)));
-                            $this->replyChannel->push($conn);
-                        }
-                    }
-                }
-            });
+            $this->listen();
         }
     }
 
@@ -160,5 +142,34 @@ abstract class AbstractActor
     public static function invoke():?ActorClient
     {
         return Actor::getInstance()->client(static::class);
+    }
+
+    public function wakeUp(Channel $replyChannel)
+    {
+        $this->replyChannel = $replyChannel;
+        $this->channel = new Channel(64);
+        $this->listen();
+    }
+
+    private function listen()
+    {
+        go(function (){
+            while (!$this->hasDoExit){
+                $array = $this->channel->pop();
+                if(is_array($array)){
+                    $msg = $array['msg'];
+                    if($msg == 'exit'){
+                        $reply = $this->exitHandler($array['arg']);
+                    }else{
+                        $reply = $this->onMessage($msg);
+                    }
+                    if($array['reply']){
+                        $conn = $array['connection'];
+                        $conn->send(Protocol::pack(serialize($reply)));
+                        $this->replyChannel->push($conn);
+                    }
+                }
+            }
+        });
     }
 }
