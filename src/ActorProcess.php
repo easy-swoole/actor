@@ -236,4 +236,12 @@ class ActorProcess extends AbstractProcess
         $actor->wakeUp($this->replyChannel);
     }
 
+    /**
+     * @return ProcessConfig
+     */
+    public function getConfig(): ProcessConfig
+    {
+        return $this->config;
+    }
+
 }
