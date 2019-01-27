@@ -100,7 +100,7 @@ class ActorProcess extends AbstractProcess
                         }
                         switch ($fromPackage->getCommand()){
                             case 'create':{
-                                $actorId = $this->processIndex.str_pad($this->actorIndex,10,'0',STR_PAD_LEFT);
+                                $actorId = $this->processIndex.str_pad($this->actorIndex,18,'0',STR_PAD_LEFT);
                                 $this->actorIndex++;
                                 $this->actorAtomic++;
                                 try{
