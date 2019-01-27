@@ -24,6 +24,7 @@ class RoomActor extends AbstractActor
             $file = 'actorData.'.$data['processIndex'].'.data';
             if(file_exists($file)){
                 $data = unserialize(file_get_contents($file));
+                //此处注意恢复进程的计数状态
                 $actorProcess->setStatus($data);
                 foreach ($data['actorList'] as $key => $item){
                     $actor = new static($item);
