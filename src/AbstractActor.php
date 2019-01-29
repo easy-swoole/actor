@@ -34,8 +34,11 @@ abstract class AbstractActor extends SplBean
     }
 
     abstract static function configure(ActorConfig $actorConfig);
+
     abstract function onStart($arg);
+
     abstract function onMessage($msg);
+
     abstract function onExit($arg);
 
     function actorId()
@@ -52,12 +55,12 @@ abstract class AbstractActor extends SplBean
     /*
      * 请用该方法来添加定时器，方便退出的时候自动清理定时器
      */
-    function tick($time,callable $callback)
+    function tick($time, callable $callback)
     {
-        $id = swoole_timer_tick($time,function ()use($callback){
-            try{
+        $id = swoole_timer_tick($time, function () use ($callback) {
+            try {
                 call_user_func($callback);
-            }catch (\Throwable $throwable){
+            } catch (\Throwable $throwable) {
                 $this->onException($throwable);
             }
         });
@@ -81,7 +84,7 @@ abstract class AbstractActor extends SplBean
         return $this;
     }
 
-    function getChannel():?Channel
+    function getChannel(): ?Channel
     {
         return $this->channel;
     }
@@ -90,20 +93,20 @@ abstract class AbstractActor extends SplBean
     {
         $this->channel = new Channel(64);
         $this->replyChannel = $replyChannel;
-        if($this->block){
-            go(function ()use($replyChannel){
-                try{
+        if ($this->block) {
+            go(function () use ($replyChannel) {
+                try {
                     $this->onStart($this->arg);
-                }catch (\Throwable $throwable){
+                } catch (\Throwable $throwable) {
                     $this->onException($throwable);
                 }
                 $this->listen();
             });
-        }else{
-            go(function (){
-                try{
+        } else {
+            go(function () {
+                try {
                     $this->onStart($this->arg);
-                }catch (\Throwable $throwable){
+                } catch (\Throwable $throwable) {
                     $this->onException($throwable);
                 }
             });
@@ -117,35 +120,35 @@ abstract class AbstractActor extends SplBean
     protected function exit($arg = null)
     {
         $this->channel->push([
-            'msg'=>'exit',
-            'reply'=>false,
-            'arg'=>$arg
+            'msg' => 'exit',
+            'reply' => false,
+            'arg' => $arg
         ]);
     }
 
     private function exitHandler($arg)
     {
         $reply = null;
-        try{
+        try {
             //清理定时器
-            foreach ($this->tickList as $tickId){
+            foreach ($this->tickList as $tickId) {
                 swoole_timer_clear($tickId);
             }
             $this->hasDoExit = true;
             $this->channel->close();
             $reply = $this->onExit($arg);
-            if($reply === null){
+            if ($reply === null) {
                 $reply = true;
             }
-        }catch (\Throwable $throwable){
-            $this->onException($throwable);
+        } catch (\Throwable $throwable) {
+            $reply = $this->onException($throwable);
         }
         return $reply;
     }
 
     abstract protected function onException(\Throwable $throwable);
 
-    public static function invoke():?ActorClient
+    public static function invoke(): ?ActorClient
     {
         return Actor::getInstance()->client(static::class);
     }
@@ -159,21 +162,21 @@ abstract class AbstractActor extends SplBean
 
     private function listen()
     {
-        go(function (){
-            while (!$this->hasDoExit){
+        go(function () {
+            while (!$this->hasDoExit) {
                 $array = $this->channel->pop();
-                if(is_array($array)){
+                if (is_array($array)) {
                     $msg = $array['msg'];
-                    if($msg == 'exit'){
+                    if ($msg == 'exit') {
                         $reply = $this->exitHandler($array['arg']);
-                    }else{
-                        try{
+                    } else {
+                        try {
                             $reply = $this->onMessage($msg);
-                        }catch (\Throwable $throwable){
-                            $this->onException($throwable);
+                        } catch (\Throwable $throwable) {
+                            $reply = $this->onException($throwable);
                         }
                     }
-                    if($array['reply']){
+                    if ($array['reply']) {
                         $conn = $array['connection'];
                         $conn->send(Protocol::pack(serialize($reply)));
                         $this->replyChannel->push($conn);
