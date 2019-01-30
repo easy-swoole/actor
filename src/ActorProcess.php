@@ -50,7 +50,7 @@ class ActorProcess extends AbstractProcess
         }
         go(function ()use($processConfig){
             $this->replyChannel = new Channel(1024*32);
-            if($this->config->getOnStart()){
+            if(is_callable($this->config->getOnStart())){
                 try{
                     call_user_func($this->config->getOnStart(),$this);
                 }catch (\Throwable $throwable){
@@ -208,10 +208,12 @@ class ActorProcess extends AbstractProcess
 
     public function onShutDown()
     {
-        try{
-            call_user_func($this->config->getOnShutdown(),$this);
-        }catch (\Throwable $throwable){
-            $this->onException($throwable);
+        if(is_callable($this->config->getOnShutdown())){
+            try{
+                call_user_func($this->config->getOnShutdown(),$this);
+            }catch (\Throwable $throwable){
+                $this->onException($throwable);
+            }
         }
     }
 
