@@ -56,7 +56,7 @@ class ActorClient
         }
     }
 
-    function exit(string $actorId,$arg = null,$timeout = 0.1)
+    function exit(string $actorId,$arg = null,$timeout = 3.0)
     {
         $processIndex = self::actorIdToProcessIndex($actorId);
         $command = new Command();
@@ -68,7 +68,7 @@ class ActorClient
         return $this->sendAndRecv($command,$timeout,$this->generateSocketByProcessIndex($processIndex));
     }
 
-    function exitAll($arg = null,$timeout = 0.1)
+    function exitAll($arg = null,$timeout = 3.0)
     {
         $command = new Command();
         $command->setCommand('exitAll');
@@ -76,7 +76,7 @@ class ActorClient
         return $this->broadcast($command,$timeout);
     }
 
-    function push(string $actorId, $msg = null, $timeout = 0.1)
+    function push(string $actorId, $msg = null, $timeout = 3.0)
     {
         $processIndex = self::actorIdToProcessIndex($actorId);
         $command = new Command();
@@ -91,7 +91,7 @@ class ActorClient
     /*
      * ['actorId1'=>$data,'actorId2'=>$data]
      */
-    function pushMulti(array $data,$timeout = 0.1)
+    function pushMulti(array $data,$timeout = 3.0)
     {
         $allNum = count($data);
         $channel = new Channel($allNum+1);
@@ -119,7 +119,7 @@ class ActorClient
         return $ret;
     }
 
-    function broadcastPush($msg, $timeout = 0.1)
+    function broadcastPush($msg, $timeout = 3.0)
     {
         $command = new Command();
         $command->setCommand('broadcast');
@@ -127,7 +127,7 @@ class ActorClient
         return $this->broadcast($command,$timeout);
     }
 
-    function status($timeout = 0.1)
+    function status($timeout = 3.0)
     {
         $command = new Command();
         $command->setCommand('createdNum');
@@ -139,7 +139,7 @@ class ActorClient
         ];
     }
 
-    function exist(string $actorId,$timeout = 0.1)
+    function exist(string $actorId,$timeout = 3.0)
     {
         $command = new Command();
         $command->setCommand('exist');
@@ -147,7 +147,7 @@ class ActorClient
         return $this->sendAndRecv($command,$timeout,$this->generateSocketByActorId($actorId));
     }
 
-    private function broadcast(Command $command,$timeout = 0.1)
+    private function broadcast(Command $command,$timeout = 3.0)
     {
         $info = [];
         $channel = new Channel($this->actorConfig->getActorProcessNum()+1);
