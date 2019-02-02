@@ -182,7 +182,7 @@ abstract class AbstractActor extends SplBean
                         for ($written = 0; $written < strlen($string); $written += $fwrite) {
                             $fwrite = $conn->send(substr($string, $written));
                             if ($fwrite === false) {
-                                return $written;
+                                break;
                             }
                         }
                         $this->replyChannel->push($conn);
