@@ -178,7 +178,13 @@ abstract class AbstractActor extends SplBean
                     }
                     if ($array['reply']) {
                         $conn = $array['connection'];
-                        $conn->send(Protocol::pack(serialize($reply)));
+                        $string = Protocol::pack(serialize($reply));
+                        for ($written = 0; $written < strlen($string); $written += $fwrite) {
+                            $fwrite = $conn->send(substr($string, $written));
+                            if ($fwrite === false) {
+                                return $written;
+                            }
+                        }
                         $this->replyChannel->push($conn);
                     }
                 }
