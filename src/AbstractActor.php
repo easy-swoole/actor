@@ -19,6 +19,7 @@ abstract class AbstractActor extends SplBean
     protected $arg;
     private $channel;
     private $tickList = [];
+    private $afterList = [];
     private $replyChannel;
     protected $block = false;
 
@@ -67,9 +68,30 @@ abstract class AbstractActor extends SplBean
         $this->tickList[$id] = $id;
     }
 
+    /*
+     * 请用该方法来添加定时器，方便退出的时候自动清理定时器
+     */
+    function after($time, callable $callback)
+    {
+        $id = swoole_timer_after($time, function () use ($callback) {
+            try {
+                call_user_func($callback);
+            } catch (\Throwable $throwable) {
+                $this->onException($throwable);
+            }
+        });
+        $this->afterList[$id] = $id;
+    }
+
     function deleteTick(int $timerId)
     {
         unset($this->tickList[$timerId]);
+        return swoole_timer_clear($timerId);
+    }
+
+    function deleteAfter(int $timerId)
+    {
+        unset($this->afterList[$timerId]);
         return swoole_timer_clear($timerId);
     }
 
