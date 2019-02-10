@@ -166,29 +166,42 @@ abstract class AbstractActor extends SplBean
             while (!$this->hasDoExit) {
                 $array = $this->channel->pop();
                 if (is_array($array)) {
-                    $msg = $array['msg'];
-                    if ($msg == 'exit') {
-                        $reply = $this->exitHandler($array['arg']);
-                    } else {
-                        try {
-                            $reply = $this->onMessage($msg);
-                        } catch (\Throwable $throwable) {
-                            $reply = $this->onException($throwable);
+                    if (is_array($array)) {
+                        if($this->block){
+                            $this->handlerMsg($array);
+                        }else{
+                            go(function ()use($array){
+                                $this->handlerMsg($array);
+                            });
                         }
-                    }
-                    if ($array['reply']) {
-                        $conn = $array['connection'];
-                        $string = Protocol::pack(serialize($reply));
-                        for ($written = 0; $written < strlen($string); $written += $fwrite) {
-                            $fwrite = $conn->send(substr($string, $written));
-                            if ($fwrite === false) {
-                                break;
-                            }
-                        }
-                        $this->replyChannel->push($conn);
                     }
                 }
             }
         });
+    }
+
+    private function handlerMsg(array $array)
+    {
+        $msg = $array['msg'];
+        if ($msg == 'exit') {
+            $reply = $this->exitHandler($array['arg']);
+        } else {
+            try {
+                $reply = $this->onMessage($msg);
+            } catch (\Throwable $throwable) {
+                $reply = $this->onException($throwable);
+            }
+        }
+        if ($array['reply']) {
+            $conn = $array['connection'];
+            $string = Protocol::pack(serialize($reply));
+            for ($written = 0; $written < strlen($string); $written += $fwrite) {
+                $fwrite = $conn->send(substr($string, $written));
+                if ($fwrite === false) {
+                    break;
+                }
+            }
+            $this->replyChannel->push($conn);
+        }
     }
 }
