@@ -66,6 +66,7 @@ abstract class AbstractActor extends SplBean
             }
         });
         $this->tickList[$id] = $id;
+        return $id;
     }
 
     /*
@@ -81,6 +82,7 @@ abstract class AbstractActor extends SplBean
             }
         });
         $this->afterList[$id] = $id;
+        return $id;
     }
 
     function deleteTick(int $timerId)
