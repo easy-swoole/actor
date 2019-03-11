@@ -90,13 +90,15 @@ class ActorProcess extends AbstractProcess
                         $allLength = Protocol::packDataLength($header);
                         $recvLeft = $allLength;
                         $data = '';
-                        while ($recvLeft > 0){
+                        $tryTimes = 10;
+                        while ($recvLeft > 0 && $tryTimes > 0){
                             $temp = $conn->recv($allLength,1);
                             if($temp === false){
                                 break;
                             }
                             $data = $data.$temp;
                             $recvLeft = $recvLeft - strlen($temp);
+                            $tryTimes--;
                         }
                         if(strlen($data) != $allLength){
                             $this->replyChannel->push($conn);
