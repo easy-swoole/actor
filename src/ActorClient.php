@@ -120,6 +120,25 @@ class ActorClient
         return $ret;
     }
 
+    /*
+     * ['actorId1'=>$data,'actorId2'=>$data]
+     */
+    function fastPushMulti(array $data,$timeout = 3.0)
+    {
+        $final = [];
+        foreach ($data as $actorId => $item){
+            $final[self::actorIdToProcessIndex($actorId)][$actorId] = $item;
+        }
+        foreach ($final as $processIndex => $data){
+            $command = new Command();
+            $command->setCommand('fastPushMulti');
+            $command->setArg($final[$processIndex]);
+            go(function ()use($command,$timeout,$processIndex){
+                $this->sendAndRecv($command,$timeout,$this->generateSocketByProcessIndex($processIndex));
+            });
+        }
+    }
+
     function broadcastPush($msg, $timeout = 3.0)
     {
         $command = new Command();

@@ -205,6 +205,15 @@ class ActorProcess extends AbstractProcess
                                 $this->replyChannel->push($conn);
                                 break;
                             }
+                            case 'fastPushMulti':{
+                                $data = $fromPackage->getArg();
+                                foreach ($data as $actorId => $item){
+                                    $this->actorList[$actorId]->getChannel()->push(['msg'=>$item,'reply'=>false]);
+                                }
+                                $conn->send(Protocol::pack(serialize(true)));
+                                $this->replyChannel->push($conn);
+                                break;
+                            }
                             default:{
                                 $conn->send(Protocol::pack(serialize(null)));
                                 $this->replyChannel->push($conn);
