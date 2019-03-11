@@ -48,8 +48,19 @@ class ActorProcess extends AbstractProcess
                 }
             });
         }
-        go(function ()use($processConfig){
-            $this->replyChannel = new Channel(1024*32);
+        $sockFile = $processConfig->getTempDir()."/{$this->getProcessName()}.sock";
+        if (file_exists($sockFile))
+        {
+            unlink($sockFile);
+        }
+        $socketServer = new Socket(AF_UNIX,SOCK_STREAM,0);
+        $socketServer->bind($sockFile);
+        if(!$socketServer->listen($processConfig->getBacklog())){
+            trigger_error('listen '.$sockFile. ' fail');
+            return;
+        }
+        go(function ()use($processConfig,$socketServer){
+            $this->replyChannel = new Channel($processConfig->getBacklog()+1);
             if(is_callable($this->config->getOnStart())){
                 try{
                     call_user_func($this->config->getOnStart(),$this);
@@ -66,156 +77,143 @@ class ActorProcess extends AbstractProcess
                     $connection->close();
                 }
             });
-            $sockFile = $processConfig->getTempDir()."/{$this->getProcessName()}.sock";
-            if (file_exists($sockFile))
-            {
-                unlink($sockFile);
-            }
-            $socketServer = new Socket(AF_UNIX,SOCK_STREAM,0);
-            $socketServer->bind($sockFile);
-            if(!$socketServer->listen($processConfig->getBacklog())){
-                trigger_error('listen '.$sockFile. ' fail');
-                return;
-            }
-            go(function ()use($socketServer){
-                while (1){
-                    $conn = $socketServer->accept(-1);
-                    if($conn){
-                        go(function ()use($conn){
-                            //先取4个字节的头
-                            $header = $conn->recv(4,1);
-                            if(strlen($header) != 4){
-                                $this->replyChannel->push($conn);
-                                return;
+            while (1){
+                $conn = $socketServer->accept(-1);
+                if($conn){
+                    go(function ()use($conn){
+                        //先取4个字节的头
+                        $header = $conn->recv(4,1);
+                        if(strlen($header) != 4){
+                            $this->replyChannel->push($conn);
+                            return;
+                        }
+                        $allLength = Protocol::packDataLength($header);
+                        $recvLeft = $allLength;
+                        $data = '';
+                        $tryTimes = 10;
+                        while ($recvLeft > 0 && $tryTimes > 0){
+                            $temp = $conn->recv($allLength,1);
+                            if($temp === false){
+                                break;
                             }
-                            $allLength = Protocol::packDataLength($header);
-                            $recvLeft = $allLength;
-                            $data = '';
-                            $tryTimes = 10;
-                            while ($recvLeft > 0 && $tryTimes > 0){
-                                $temp = $conn->recv($allLength,1);
-                                if($temp === false){
-                                    break;
+                            $data = $data.$temp;
+                            $recvLeft = $recvLeft - strlen($temp);
+                            $tryTimes--;
+                        }
+                        if(strlen($data) != $allLength){
+                            $this->replyChannel->push($conn);
+                            return;
+                        }
+                        $fromPackage = unserialize($data);
+                        if(!$fromPackage instanceof Command){
+                            $this->replyChannel->push($conn);
+                            return;
+                        }
+                        switch ($fromPackage->getCommand()){
+                            case 'create':{
+                                $actorId = $this->processIndex.str_pad($this->actorIndex,18,'0',STR_PAD_LEFT);
+                                $this->actorIndex++;
+                                $this->actorAtomic++;
+                                try{
+                                    /** @var  $actor AbstractActor*/
+                                    $actor = new $this->actorClass();
+                                    $actor->setBlock($this->config->isBlock())->setActorId($actorId)->setArg($fromPackage->getArg());
+                                    $this->actorList[$actorId] = $actor;
+                                    $actor->__startUp($this->replyChannel);
+                                }catch (\Throwable $throwable){
+                                    $this->actorAtomic--;
+                                    unset($this->actorList[$actorId]);
+                                    $actorId = null;
+                                    $this->onException($throwable);
                                 }
-                                $data = $data.$temp;
-                                $recvLeft = $recvLeft - strlen($temp);
-                                $tryTimes--;
-                            }
-                            if(strlen($data) != $allLength){
+                                $conn->send(Protocol::pack(serialize($actorId)));
                                 $this->replyChannel->push($conn);
-                                return;
+                                break;
                             }
-                            $fromPackage = unserialize($data);
-                            if(!$fromPackage instanceof Command){
+                            case 'sendTo':{
+                                $args = $fromPackage->getArg();
+                                if(isset($args['actorId'])){
+                                    $actorId = $args['actorId'];
+                                    if(isset($this->actorList[$actorId])){
+                                        //消息回复在actor中
+                                        $this->actorList[$actorId]->getChannel()->push([
+                                            'connection'=>$conn,
+                                            'msg'=>$args['msg'],
+                                            'reply'=>true
+                                        ]);
+                                        break;
+                                    }
+                                }
+                                $conn->send(Protocol::pack(serialize(null)));
                                 $this->replyChannel->push($conn);
-                                return;
+                                break;
                             }
-                            switch ($fromPackage->getCommand()){
-                                case 'create':{
-                                    $actorId = $this->processIndex.str_pad($this->actorIndex,18,'0',STR_PAD_LEFT);
-                                    $this->actorIndex++;
-                                    $this->actorAtomic++;
-                                    try{
-                                        /** @var  $actor AbstractActor*/
-                                        $actor = new $this->actorClass();
-                                        $actor->setBlock($this->config->isBlock())->setActorId($actorId)->setArg($fromPackage->getArg());
-                                        $this->actorList[$actorId] = $actor;
-                                        $actor->__startUp($this->replyChannel);
-                                    }catch (\Throwable $throwable){
+                            case 'exit':{
+                                $args = $fromPackage->getArg();
+                                if(isset($args['actorId'])){
+                                    $actorId = $args['actorId'];
+                                    if(isset($this->actorList[$actorId])){
+                                        //消息回复在actor中
+                                        $this->actorList[$actorId]->getChannel()->push([
+                                            'connection'=>$conn,
+                                            'msg'=>'exit',
+                                            'arg'=>$args['msg'],//单独多出arg字段
+                                            'reply'=>true
+                                        ]);
                                         $this->actorAtomic--;
                                         unset($this->actorList[$actorId]);
-                                        $actorId = null;
-                                        $this->onException($throwable);
+                                        break;
                                     }
-                                    $conn->send(Protocol::pack(serialize($actorId)));
-                                    $this->replyChannel->push($conn);
-                                    break;
                                 }
-                                case 'sendTo':{
-                                    $args = $fromPackage->getArg();
-                                    if(isset($args['actorId'])){
-                                        $actorId = $args['actorId'];
-                                        if(isset($this->actorList[$actorId])){
-                                            //消息回复在actor中
-                                            $this->actorList[$actorId]->getChannel()->push([
-                                                'connection'=>$conn,
-                                                'msg'=>$args['msg'],
-                                                'reply'=>true
-                                            ]);
-                                            break;
-                                        }
-                                    }
-                                    $conn->send(Protocol::pack(serialize(null)));
-                                    $this->replyChannel->push($conn);
-                                    break;
-                                }
-                                case 'exit':{
-                                    $args = $fromPackage->getArg();
-                                    if(isset($args['actorId'])){
-                                        $actorId = $args['actorId'];
-                                        if(isset($this->actorList[$actorId])){
-                                            //消息回复在actor中
-                                            $this->actorList[$actorId]->getChannel()->push([
-                                                'connection'=>$conn,
-                                                'msg'=>'exit',
-                                                'arg'=>$args['msg'],//单独多出arg字段
-                                                'reply'=>true
-                                            ]);
-                                            $this->actorAtomic--;
-                                            unset($this->actorList[$actorId]);
-                                            break;
-                                        }
-                                    }
-                                    $conn->send(Protocol::pack(serialize(null)));
-                                    $this->replyChannel->push($conn);
-                                    break;
-                                }
-                                case 'createdNum':{
-                                    $conn->send(Protocol::pack(serialize($this->actorAtomic)));
-                                    $this->replyChannel->push($conn);
-                                    break;
-                                }
-                                case 'exitAll':{
-                                    $this->actorAtomic = 0;
-                                    $args = $fromPackage->getArg();
-                                    foreach ($this->actorList as $actorId => $item){
-                                        //单独多出arg字段
-                                        $item->getChannel()->push(['msg'=>'exit','reply'=>false,'arg'=>$args]);
-                                        unset($this->actorList[$actorId]);
-                                    }
-                                    $conn->send(Protocol::pack(serialize(true)));
-                                    $this->replyChannel->push($conn);
-                                    break;
-                                }
-                                case 'broadcast':{
-                                    $args = $fromPackage->getArg();
-                                    foreach ($this->actorList as $actorId => $item){
-                                        $item->getChannel()->push(['msg'=>$args,'reply'=>false]);
-                                    }
-                                    $conn->send(Protocol::pack(serialize(count($this->actorList))));
-                                    $this->replyChannel->push($conn);
-                                    break;
-                                }
-                                case 'exist':{
-                                    $actorId = $fromPackage->getArg();
-                                    if(isset($this->actorList[$actorId])){
-                                        $conn->send(Protocol::pack(serialize(true)));
-                                    }else{
-                                        $conn->send(Protocol::pack(serialize(false)));
-                                    }
-                                    $this->replyChannel->push($conn);
-                                    break;
-                                }
-                                default:{
-                                    $conn->send(Protocol::pack(serialize(null)));
-                                    $this->replyChannel->push($conn);
-                                    break;
-                                }
+                                $conn->send(Protocol::pack(serialize(null)));
+                                $this->replyChannel->push($conn);
+                                break;
                             }
-                        });
-                    }
+                            case 'createdNum':{
+                                $conn->send(Protocol::pack(serialize($this->actorAtomic)));
+                                $this->replyChannel->push($conn);
+                                break;
+                            }
+                            case 'exitAll':{
+                                $this->actorAtomic = 0;
+                                $args = $fromPackage->getArg();
+                                foreach ($this->actorList as $actorId => $item){
+                                    //单独多出arg字段
+                                    $item->getChannel()->push(['msg'=>'exit','reply'=>false,'arg'=>$args]);
+                                    unset($this->actorList[$actorId]);
+                                }
+                                $conn->send(Protocol::pack(serialize(true)));
+                                $this->replyChannel->push($conn);
+                                break;
+                            }
+                            case 'broadcast':{
+                                $args = $fromPackage->getArg();
+                                foreach ($this->actorList as $actorId => $item){
+                                    $item->getChannel()->push(['msg'=>$args,'reply'=>false]);
+                                }
+                                $conn->send(Protocol::pack(serialize(count($this->actorList))));
+                                $this->replyChannel->push($conn);
+                                break;
+                            }
+                            case 'exist':{
+                                $actorId = $fromPackage->getArg();
+                                if(isset($this->actorList[$actorId])){
+                                    $conn->send(Protocol::pack(serialize(true)));
+                                }else{
+                                    $conn->send(Protocol::pack(serialize(false)));
+                                }
+                                $this->replyChannel->push($conn);
+                                break;
+                            }
+                            default:{
+                                $conn->send(Protocol::pack(serialize(null)));
+                                $this->replyChannel->push($conn);
+                                break;
+                            }
+                        }
+                    });
                 }
-            });
+            }
         });
     }
 

@@ -190,14 +190,12 @@ abstract class AbstractActor extends SplBean
             while (!$this->hasDoExit) {
                 $array = $this->channel->pop();
                 if (is_array($array)) {
-                    if (is_array($array)) {
-                        if($this->block){
+                    if($this->block){
+                        $this->handlerMsg($array);
+                    }else{
+                        go(function ()use($array){
                             $this->handlerMsg($array);
-                        }else{
-                            go(function ()use($array){
-                                $this->handlerMsg($array);
-                            });
-                        }
+                        });
                     }
                 }
             }
