@@ -2,14 +2,14 @@
 /**
  * Created by PhpStorm.
  * User: yf
- * Date: 2018-12-27
- * Time: 12:18
+ * Date: 2019-03-11
+ * Time: 18:45
  */
 
 namespace EasySwoole\Actor\Exception;
 
 
-class InvalidActor extends Exception
+class Exception extends \Exception
 {
 
 }

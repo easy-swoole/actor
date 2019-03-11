@@ -9,7 +9,7 @@
 namespace EasySwoole\Actor\Exception;
 
 
-class RuntimeError extends \Exception
+class RuntimeError extends Exception
 {
 
 }

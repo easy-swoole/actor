@@ -9,6 +9,7 @@
 namespace EasySwoole\Actor;
 
 
+use EasySwoole\Actor\Exception\Exception;
 use Swoole\Coroutine\Channel;
 
 class ActorClient
@@ -188,8 +189,11 @@ class ActorClient
     private function sendAndRecv(Command $command,$timeout,$socketFile)
     {
         $client = new UnixClient($socketFile);
-        $client->send(serialize($command));
-        $ret =  $client->recv($timeout);
+        $ret = $client->send(serialize($command));
+        if($ret === false){
+            throw new Exception('unix send data error in error code:'.$client->client()->errCode);
+        }
+        $ret = $client->recv($timeout);
         if(!empty($ret)){
             return unserialize($ret);
         }
