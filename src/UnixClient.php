@@ -39,6 +39,7 @@ class UnixClient
         if($this->client->isConnected()){
             $this->client->close();
         }
+        $this->client = null;
     }
 
     function send(string $rawData)
