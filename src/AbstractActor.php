@@ -19,7 +19,6 @@ abstract class AbstractActor extends SplBean
     protected $arg;
     private $channel;
     private $tickList = [];
-    private $afterList = [];
     private $replyChannel;
     protected $block = false;
 
@@ -81,19 +80,12 @@ abstract class AbstractActor extends SplBean
                 $this->onException($throwable);
             }
         });
-        $this->afterList[$id] = $id;
         return $id;
     }
 
     function deleteTick(int $timerId)
     {
         unset($this->tickList[$timerId]);
-        return swoole_timer_clear($timerId);
-    }
-
-    function deleteAfter(int $timerId)
-    {
-        unset($this->afterList[$timerId]);
         return swoole_timer_clear($timerId);
     }
 
