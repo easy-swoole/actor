@@ -35,7 +35,7 @@ class ServerNode extends SplBean
     /**
      * @return mixed
      */
-    public function getPort()
+    public function getPort():?int
     {
         return $this->port;
     }
@@ -43,7 +43,7 @@ class ServerNode extends SplBean
     /**
      * @param mixed $port
      */
-    public function setPort($port): void
+    public function setPort(int $port): void
     {
         $this->port = $port;
     }
