@@ -2,14 +2,16 @@
 /**
  * Created by PhpStorm.
  * User: yf
- * Date: 2018-12-27
- * Time: 13:38
+ * Date: 2019-04-08
+ * Time: 17:15
  */
 
-namespace EasySwoole\Actor;
+namespace EasySwoole\Actor\Bean;
 
 
-class Command
+use EasySwoole\Spl\SplBean;
+
+class Command extends SplBean
 {
     protected $command;
     protected $arg;
