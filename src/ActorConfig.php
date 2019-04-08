@@ -15,22 +15,9 @@ class ActorConfig
     protected $actorProcessNum = 3;
     protected $maxActorNum = 10000;
     protected $backlog = 256;
-    /**
-     * @var $onStart callable
-     */
-    protected $onStart;
-    /**
-     * @var $onShutdown callable
-     */
-    protected $onShutdown;
-
-    protected $block = false;
-
-    protected $tick = 0;
-
-    protected $onTick;
-
     protected $processOnException;
+    protected $listenHost = '127.0.0.1';
+    protected $listenPort;
 
     /**
      * @return mixed
@@ -40,10 +27,12 @@ class ActorConfig
         return $this->actorName;
     }
 
-    public function setActorName($actorName): ActorConfig
+    /**
+     * @param mixed $actorName
+     */
+    public function setActorName($actorName): void
     {
         $this->actorName = $actorName;
-        return $this;
     }
 
     /**
@@ -54,11 +43,12 @@ class ActorConfig
         return $this->actorProcessNum;
     }
 
-
-    public function setActorProcessNum(int $actorProcessNum): ActorConfig
+    /**
+     * @param int $actorProcessNum
+     */
+    public function setActorProcessNum(int $actorProcessNum): void
     {
         $this->actorProcessNum = $actorProcessNum;
-        return $this;
     }
 
     /**
@@ -69,11 +59,12 @@ class ActorConfig
         return $this->maxActorNum;
     }
 
-
-    public function setMaxActorNum(int $maxActorNum): ActorConfig
+    /**
+     * @param int $maxActorNum
+     */
+    public function setMaxActorNum(int $maxActorNum): void
     {
         $this->maxActorNum = $maxActorNum;
-        return $this;
     }
 
     /**
@@ -93,86 +84,6 @@ class ActorConfig
     }
 
     /**
-     * @return callable
-     */
-    public function getOnStart(): ?callable
-    {
-        return $this->onStart;
-    }
-
-    /**
-     * @param callable $onStart
-     */
-    public function setOnStart(?callable $onStart): void
-    {
-        $this->onStart = $onStart;
-    }
-
-    /**
-     * @return callable
-     */
-    public function getOnShutdown(): ?callable
-    {
-        return $this->onShutdown;
-    }
-
-    /**
-     * @param callable $onShutdown
-     */
-    public function setOnShutdown(?callable $onShutdown): void
-    {
-        $this->onShutdown = $onShutdown;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isBlock(): bool
-    {
-        return $this->block;
-    }
-
-    /**
-     * @param bool $block
-     */
-    public function setBlock(bool $block): void
-    {
-        $this->block = $block;
-    }
-
-    /**
-     * @return int
-     */
-    public function getTick(): int
-    {
-        return $this->tick;
-    }
-
-    /**
-     * @param int $tick
-     */
-    public function setTick(int $tick): void
-    {
-        $this->tick = $tick;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getOnTick()
-    {
-        return $this->onTick;
-    }
-
-    /**
-     * @param mixed $onTick
-     */
-    public function setOnTick($onTick): void
-    {
-        $this->onTick = $onTick;
-    }
-
-    /**
      * @return mixed
      */
     public function getProcessOnException()
@@ -187,4 +98,37 @@ class ActorConfig
     {
         $this->processOnException = $processOnException;
     }
+
+    /**
+     * @return string
+     */
+    public function getListenHost(): string
+    {
+        return $this->listenHost;
+    }
+
+    /**
+     * @param string $listenHost
+     */
+    public function setListenHost(string $listenHost): void
+    {
+        $this->listenHost = $listenHost;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getListenPort()
+    {
+        return $this->listenPort;
+    }
+
+    /**
+     * @param mixed $listenPort
+     */
+    public function setListenPort($listenPort): void
+    {
+        $this->listenPort = $listenPort;
+    }
+
 }
