@@ -17,12 +17,18 @@ class ActorProxyProcess extends AbstractProcess
 
     public function run($arg)
     {
-        /** @var ProcessConfig $arg */
+        /** @var ProxyProcessConfig $arg */
         $socket = new Socket(AF_INET,SOCK_STREAM,0);
         $socket->setOption(SOL_SOCKET,SO_REUSEPORT,true);
         $socket->setOption(SOL_SOCKET,SO_REUSEADDR,true);
-        $socket->bind($arg->getListenHost(),$arg->getListenPort());
-        $socket->listen($arg->getBacklog());
+        $ret = $socket->bind($arg->getListenAddress(),$arg->getListenPort());
+        if(!$ret){
+            return;
+        }
+        $ret = $socket->listen(2048);
+        if(!$ret){
+            return;
+        }
         while (1){
             $client = $socket->accept(-1);
             if($client){
