@@ -13,39 +13,106 @@ use EasySwoole\Spl\SplBean;
 
 class ServerNode extends SplBean
 {
-    protected $id;
-    protected $port;
+    protected $listenAddress = '0.0.0.0';
+    protected $listenPort;
+    protected $serverId = '01';
+    protected $proxy = 1;
+    protected $worker = 3;
+    protected $dispatcher;
+
+    /**
+     * @return string
+     */
+    public function getListenAddress(): string
+    {
+        return $this->listenAddress;
+    }
+
+    /**
+     * @param string $listenAddress
+     */
+    public function setListenAddress(string $listenAddress): void
+    {
+        $this->listenAddress = $listenAddress;
+    }
 
     /**
      * @return mixed
      */
-    public function getId()
+    public function getListenPort()
     {
-        return $this->id;
+        return $this->listenPort;
     }
 
     /**
-     * @param mixed $id
+     * @param mixed $listenPort
      */
-    public function setId($id): void
+    public function setListenPort($listenPort): void
     {
-        $this->id = $id;
+        $this->listenPort = $listenPort;
+    }
+
+    /**
+     * @return int
+     */
+    public function getServerId(): int
+    {
+        return $this->serverId;
+    }
+
+    /**
+     * @param int $serverId
+     */
+    public function setServerId(int $serverId): void
+    {
+        $this->serverId = $serverId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getProxy(): int
+    {
+        return $this->proxy;
+    }
+
+    /**
+     * @param int $proxy
+     */
+    public function setProxy(int $proxy): void
+    {
+        $this->proxy = $proxy;
+    }
+
+    /**
+     * @return int
+     */
+    public function getWorker(): int
+    {
+        return $this->worker;
+    }
+
+    /**
+     * @param int $worker
+     */
+    public function setWorker(int $worker): void
+    {
+        $this->worker = $worker;
     }
 
     /**
      * @return mixed
      */
-    public function getPort():?int
+    public function getDispatcher()
     {
-        return $this->port;
+        return $this->dispatcher;
     }
 
     /**
-     * @param mixed $port
+     * @param mixed $dispatcher
      */
-    public function setPort(int $port): void
+    public function setDispatcher($dispatcher): void
     {
-        $this->port = $port;
+        $this->dispatcher = $dispatcher;
     }
-
 }
