@@ -16,8 +16,8 @@ class ServerNode extends SplBean
     protected $listenAddress = '0.0.0.0';
     protected $listenPort;
     protected $serverId = '01';
-    protected $proxy = 1;
-    protected $worker = 3;
+    protected $proxyNum = 1;
+    protected $workerNum = 3;
     protected $dispatcher;
 
     /**
@@ -71,33 +71,33 @@ class ServerNode extends SplBean
     /**
      * @return int
      */
-    public function getProxy(): int
+    public function getProxyNum(): int
     {
-        return $this->proxy;
+        return $this->proxyNum;
     }
 
     /**
-     * @param int $proxy
+     * @param int $proxyNum
      */
-    public function setProxy(int $proxy): void
+    public function setProxyNum(int $proxyNum): void
     {
-        $this->proxy = $proxy;
+        $this->proxyNum = $proxyNum;
     }
 
     /**
      * @return int
      */
-    public function getWorker(): int
+    public function getWorkerNum(): int
     {
-        return $this->worker;
+        return $this->workerNum;
     }
 
     /**
-     * @param int $worker
+     * @param int $workerNum
      */
-    public function setWorker(int $worker): void
+    public function setWorkerNum(int $workerNum): void
     {
-        $this->worker = $worker;
+        $this->workerNum = $workerNum;
     }
 
     /**
