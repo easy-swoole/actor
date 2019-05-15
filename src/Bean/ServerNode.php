@@ -9,12 +9,17 @@
 namespace EasySwoole\Actor\Bean;
 
 
+use EasySwoole\Actor\DispatcherInterface;
 use EasySwoole\Spl\SplBean;
 
 class ServerNode extends SplBean
 {
+    protected $ip = '127.0.0.1';
     protected $listenAddress = '0.0.0.0';
     protected $listenPort;
+    /*
+     * 节点id固定长度为2
+     */
     protected $serverId = '01';
     protected $proxyNum = 1;
     protected $workerNum = 3;
@@ -60,12 +65,14 @@ class ServerNode extends SplBean
         return $this->serverId;
     }
 
-    /**
-     * @param int $serverId
-     */
-    public function setServerId(int $serverId): void
+
+    public function setServerId(string $serverId): bool
     {
+        if(strlen($serverId) != 2){
+            return false;
+        }
         $this->serverId = $serverId;
+        return true;
     }
 
     /**
@@ -103,16 +110,40 @@ class ServerNode extends SplBean
     /**
      * @return mixed
      */
-    public function getDispatcher()
+    public function getDispatcher():DispatcherInterface
     {
+        if(!$this->dispatcher){
+            $this->dispatcher = new class implements DispatcherInterface{
+                function dispatch(string $serverId): ?ServerNode
+                {
+                    // TODO: Implement dispatch() method.
+                }
+            };
+        }
         return $this->dispatcher;
     }
 
     /**
      * @param mixed $dispatcher
      */
-    public function setDispatcher($dispatcher): void
+    public function setDispatcher(DispatcherInterface $dispatcher): void
     {
         $this->dispatcher = $dispatcher;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getIp()
+    {
+        return $this->ip;
+    }
+
+    /**
+     * @param mixed $ip
+     */
+    public function setIp($ip): void
+    {
+        $this->ip = $ip;
     }
 }

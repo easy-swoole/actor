@@ -15,6 +15,7 @@ class Command extends SplBean
 {
     protected $command;
     protected $arg;
+    protected $actorId;
 
     /**
      * @return mixed
@@ -46,5 +47,21 @@ class Command extends SplBean
     public function setArg($arg): void
     {
         $this->arg = $arg;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getActorId()
+    {
+        return $this->actorId;
+    }
+
+    /**
+     * @param mixed $actorId
+     */
+    public function setActorId($actorId): void
+    {
+        $this->actorId = $actorId;
     }
 }

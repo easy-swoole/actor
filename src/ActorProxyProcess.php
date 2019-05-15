@@ -9,6 +9,7 @@
 namespace EasySwoole\Actor;
 
 
+use EasySwoole\Actor\Bean\Command;
 use EasySwoole\Component\Process\AbstractProcess;
 use Swoole\Coroutine\Socket;
 
@@ -32,8 +33,34 @@ class ActorProxyProcess extends AbstractProcess
         while (1){
             $client = $socket->accept(-1);
             if($client){
-                go(function ()use($client){
+                go(function ()use($client,$arg){
+                    $header = $client->recvAll(4,1);
+                    if(strlen($header) != 4){
+                        $client->close();
+                        return;
+                    }
+                    $allLength = Protocol::packDataLength($header);
+                    $data = $client->recvAll($allLength,3);
+                    if(strlen($data) != $allLength){
+                        $client->close();
+                        return;
+                    }
+                    $command = unserialize($data);
+                    if(!$command instanceof Command){
+                        $client->close();
+                        return;
+                    }
+                    $serverId = substr($command,0,2);
+                    $node = $arg->getDispatcher()->dispatch($serverId);
+                    if(!$node){
+                        $client->close();
+                        return;
+                    }
+                    switch ($command->getCommand()){
+                        case 'create':{
 
+                        }
+                    }
                 });
             }
         }
