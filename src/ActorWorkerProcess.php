@@ -13,7 +13,7 @@ class ActorWorkerProcess extends AbstractProcess
     public function run($arg)
     {
         /** @var WorkerProcessConfig $arg */
-        $sockFile = "Actor.{$arg->getActorName()}.{$arg->getServerId()}.{$arg->getWorkerId()}.sock";
+        $sockFile = "{$arg->getTemDir()}/Actor.{$arg->getActorName()}.{$arg->getServerId()}.{$arg->getWorkerId()}.sock";
         if (file_exists($sockFile))
         {
             unlink($sockFile);
