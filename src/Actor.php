@@ -60,7 +60,12 @@ class Actor
             $proxyNum = $config->getProxyNum();
             for($i = 1;$i <= $proxyNum;$i++){
                 $proxyConfig = new ProxyProcessConfig($config->toArray());
-                $tempProxyList['proxy'][] = new ActorProxyProcess("Actor.{$actorName}.{$i}",$proxyConfig,false,2,true);
+                $tempProxyList['proxy'][] = new ActorProxyProcess("Actor.{$actorName}.Proxy.{$i}",$proxyConfig,false,2,true);
+            }
+            $workerNum = $config->getWorkerNum();
+            for($i = 1;$i <= $workerNum;$i++){
+                $workerConfig = new WorkerProcessConfig($config->toArray() + ['workerId'=>$i]);
+                $tempProxyList['proxy'][] = new ActorWorkerProcess("Actor.{$actorName}.Worker.{$i}",$workerConfig,false,2,true);
             }
             $list[$actorName] = $tempProxyList;
         }
