@@ -33,6 +33,7 @@ class Actor
                 if(empty($config->getListenPort())){
                     throw new InvalidActor("actor listen port is required for class:{$actorClass}");
                 }
+                $config->__setActorClass($actorClass);
                 $this->actorList[$actorClass] = $config;
             }else{
                 throw new InvalidActor("{$actorClass} is not an sub class of ".AbstractActor::class);
@@ -65,7 +66,7 @@ class Actor
             $workerNum = $config->getWorkerNum();
             for($i = 1;$i <= $workerNum;$i++){
                 $workerConfig = new WorkerProcessConfig($config->toArray() + ['workerId'=>$i]);
-                $tempProxyList['proxy'][] = new ActorWorkerProcess("Actor.{$actorName}.Worker.{$i}",$workerConfig,false,2,true);
+                $tempProxyList['worker'][] = new ActorWorkerProcess("Actor.{$actorName}.Worker.{$i}",$workerConfig,false,2,true);
             }
             $list[$actorName] = $tempProxyList;
         }

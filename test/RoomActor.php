@@ -15,5 +15,6 @@ class RoomActor extends AbstractActor
         // TODO: Implement configure() method.
         $actorConfig->setActorName('Room');
         $actorConfig->setListenPort(9600);
+        $actorConfig->setWorkerNum(1);
     }
 }

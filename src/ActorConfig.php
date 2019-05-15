@@ -17,6 +17,7 @@ class ActorConfig extends ServerNode
      * 用于识别一个actor
      */
     protected $actorName;
+    protected $actorClass;
     protected $temDir;
 
     /**
@@ -49,6 +50,22 @@ class ActorConfig extends ServerNode
     public function setTemDir($temDir): void
     {
         $this->temDir = $temDir;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getActorClass()
+    {
+        return $this->actorClass;
+    }
+
+    /**
+     * @param mixed $actorClass
+     */
+    public function __setActorClass($actorClass): void
+    {
+        $this->actorClass = $actorClass;
     }
 
     protected function initialize(): void

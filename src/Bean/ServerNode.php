@@ -58,9 +58,9 @@ class ServerNode extends SplBean
     }
 
     /**
-     * @return int
+     * @return string
      */
-    public function getServerId(): int
+    public function getServerId(): string
     {
         return $this->serverId;
     }

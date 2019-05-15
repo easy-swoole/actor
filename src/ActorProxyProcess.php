@@ -24,10 +24,12 @@ class ActorProxyProcess extends AbstractProcess
         $socket->setOption(SOL_SOCKET,SO_REUSEADDR,true);
         $ret = $socket->bind($arg->getListenAddress(),$arg->getListenPort());
         if(!$ret){
+            trigger_error("Actor.{$arg->getActorName()} bind {$arg->getListenAddress()}:{$arg->getListenPort()} fail");
             return;
         }
         $ret = $socket->listen(2048);
         if(!$ret){
+            trigger_error("Actor.{$arg->getActorName()} listen {$arg->getListenAddress()}:{$arg->getListenPort()} fail");
             return;
         }
         while (1){
