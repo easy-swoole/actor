@@ -52,17 +52,12 @@ class ActorProxyProcess extends AbstractProcess
                         $client->close();
                         return;
                     }
-                    $serverId = substr($command,0,2);
-                    $node = $arg->getDispatcher()->dispatch($serverId);
-                    if(!$node){
-                        $client->close();
-                        return;
-                    }
                     switch ($command->getCommand()){
                         case 'create':{
-
+                            break;
                         }
                     }
+                    $client->close();
                 });
             }
         }

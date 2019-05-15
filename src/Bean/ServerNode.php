@@ -9,7 +9,6 @@
 namespace EasySwoole\Actor\Bean;
 
 
-use EasySwoole\Actor\DispatcherInterface;
 use EasySwoole\Spl\SplBean;
 
 class ServerNode extends SplBean
@@ -23,7 +22,6 @@ class ServerNode extends SplBean
     protected $serverId = '01';
     protected $proxyNum = 1;
     protected $workerNum = 3;
-    protected $dispatcher;
 
     /**
      * @return string
@@ -105,30 +103,6 @@ class ServerNode extends SplBean
     public function setWorkerNum(int $workerNum): void
     {
         $this->workerNum = $workerNum;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getDispatcher():DispatcherInterface
-    {
-        if(!$this->dispatcher){
-            $this->dispatcher = new class implements DispatcherInterface{
-                function dispatch(string $serverId): ?ServerNode
-                {
-                    // TODO: Implement dispatch() method.
-                }
-            };
-        }
-        return $this->dispatcher;
-    }
-
-    /**
-     * @param mixed $dispatcher
-     */
-    public function setDispatcher(DispatcherInterface $dispatcher): void
-    {
-        $this->dispatcher = $dispatcher;
     }
 
     /**
