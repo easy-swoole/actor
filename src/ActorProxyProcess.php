@@ -53,7 +53,7 @@ class ActorProxyProcess extends AbstractProcess
                         return;
                     }
                     switch ($command->getCommand()){
-                        case 'create':{
+                        case Command::CREATE:{
                             break;
                         }
                     }
@@ -72,5 +72,10 @@ class ActorProxyProcess extends AbstractProcess
     public function onReceive(string $str)
     {
         // TODO: Implement onReceive() method.
+    }
+
+    private function sendAndRecv()
+    {
+
     }
 }

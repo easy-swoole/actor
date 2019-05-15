@@ -13,6 +13,7 @@ use EasySwoole\Spl\SplBean;
 
 class Command extends SplBean
 {
+    public const CREATE = 1;
     protected $command;
     protected $arg;
     protected $actorId;
