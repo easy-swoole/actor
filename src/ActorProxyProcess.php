@@ -9,73 +9,36 @@
 namespace EasySwoole\Actor;
 
 
-use EasySwoole\Actor\Bean\Command;
-use EasySwoole\Component\Process\AbstractProcess;
+use EasySwoole\Actor\Bean\RequestCommand;
+use EasySwoole\Component\Process\Socket\AbstractTcpProcess;
 use Swoole\Coroutine\Socket;
 
-class ActorProxyProcess extends AbstractProcess
+class ActorProxyProcess extends AbstractTcpProcess
 {
-
-    public function run($arg)
+    function onAccept(Socket $socket)
     {
-        /** @var ProxyProcessConfig $arg */
-        $socket = new Socket(AF_INET,SOCK_STREAM,0);
-        $socket->setOption(SOL_SOCKET,SO_REUSEPORT,true);
-        $socket->setOption(SOL_SOCKET,SO_REUSEADDR,true);
-        $ret = $socket->bind($arg->getListenAddress(),$arg->getListenPort());
-        if(!$ret){
-            trigger_error("Actor.{$arg->getActorName()} bind {$arg->getListenAddress()}:{$arg->getListenPort()} fail");
-            return;
-        }
-        $ret = $socket->listen(2048);
-        if(!$ret){
-            trigger_error("Actor.{$arg->getActorName()} listen {$arg->getListenAddress()}:{$arg->getListenPort()} fail");
-            return;
-        }
-        while (1){
-            $client = $socket->accept(-1);
-            if($client){
-                go(function ()use($client,$arg){
-                    $header = $client->recvAll(4,1);
-                    if(strlen($header) != 4){
-                        $client->close();
-                        return;
-                    }
-                    $allLength = Protocol::packDataLength($header);
-                    $data = $client->recvAll($allLength,3);
-                    if(strlen($data) != $allLength){
-                        $client->close();
-                        return;
-                    }
-                    $command = unserialize($data);
-                    if(!$command instanceof Command){
-                        $client->close();
-                        return;
-                    }
-                    switch ($command->getCommand()){
-                        case Command::CREATE:{
-                            break;
-                        }
-                    }
-                    $client->close();
-                });
+        go(function ()use($socket){
+            $header = $socket->recvAll(4,1);
+            if(strlen($header) != 4){
+                $socket->close();
+                return;
             }
-        }
-
-    }
-
-    public function onShutDown()
-    {
-        // TODO: Implement onShutDown() method.
-    }
-
-    public function onReceive(string $str)
-    {
-        // TODO: Implement onReceive() method.
-    }
-
-    private function sendAndRecv()
-    {
-
+            $allLength = Protocol::packDataLength($header);
+            $data = $socket->recvAll($allLength,3);
+            if(strlen($data) != $allLength){
+                $socket->close();
+                return;
+            }
+            $command = unserialize($data);
+            if(!$command instanceof RequestCommand){
+                $socket->close();
+                return;
+            }
+            switch ($command->getCommand()){
+                case RequestCommand::CREATE:{
+                    break;
+                }
+            }
+        });
     }
 }

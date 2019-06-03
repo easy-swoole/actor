@@ -5,7 +5,7 @@ namespace EasySwoole\Actor;
 
 
 
-use EasySwoole\Actor\Bean\ServerNode;
+use EasySwoole\Actor\Bean\ActorNodeNode;
 use Swoole\Coroutine\Client;
 
 class ActorClient
@@ -13,7 +13,7 @@ class ActorClient
     protected $config;
     protected $client;
 
-    function __construct(ServerNode $config)
+    function __construct(ActorNodeNode $config)
     {
         $this->config = $config;
 
@@ -24,7 +24,7 @@ class ActorClient
 
     }
 
-    function connect(ServerNode $node):?Client
+    function connect(ActorNodeNode $node):?Client
     {
         $client = new Client(SWOOLE_TCP);
         $client->set([

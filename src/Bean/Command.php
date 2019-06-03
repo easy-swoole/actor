@@ -11,7 +11,7 @@ namespace EasySwoole\Actor\Bean;
 
 use EasySwoole\Spl\SplBean;
 
-class Command extends SplBean
+class RequestCommand extends SplBean
 {
     public const CREATE = 1;
     protected $command;

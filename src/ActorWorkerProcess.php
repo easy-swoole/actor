@@ -12,7 +12,7 @@ class ActorWorkerProcess extends AbstractProcess
 {
     public function run($arg)
     {
-        /** @var WorkerProcessConfig $arg */
+        /** @var WorkerProcessActorConfig $arg */
         $sockFile = "{$arg->getTemDir()}/Actor.{$arg->getActorName()}.{$arg->getServerId()}.{$arg->getWorkerId()}.sock";
         if (file_exists($sockFile))
         {

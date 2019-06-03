@@ -5,13 +5,74 @@ namespace EasySwoole\Actor;
 
 
 use EasySwoole\Actor\Exception\InvalidActor;
-use EasySwoole\Component\Singleton;
+use EasySwoole\Trigger\TriggerInterface;
 
 class Actor
 {
     private $actorList = [];
+    private $tempDir;
+    private $listenPort = 9500;
+    private $listenAddress = '0.0.0.0';
+    private $proxyNum = 3;
+    private $trigger;
+    private $machineId = '001';
 
-    use Singleton;
+    function __construct()
+    {
+        $this->tempDir = sys_get_temp_dir();
+    }
+
+    /**
+     * @return string
+     */
+    public function getMachineId(): string
+    {
+        return $this->machineId;
+    }
+
+    public function setMachineId(string $machineId): Actor
+    {
+        $machineId = substr($machineId,0,3);
+        $this->machineId = $machineId;
+        return $this;
+    }
+
+    public function getTrigger():?TriggerInterface
+    {
+        return $this->trigger;
+    }
+
+    public function setTrigger(TriggerInterface $trigger): Actor
+    {
+        $this->trigger = $trigger;
+        return $this;
+    }
+
+    function setTempDir(string $tempDir):Actor
+    {
+        $this->tempDir = $tempDir;
+        return $this;
+    }
+
+    public function setListenPort(int $listenPort): Actor
+    {
+        $this->listenPort = $listenPort;
+        return $this;
+    }
+
+
+    public function setListenAddress(string $listenAddress): Actor
+    {
+        $this->listenAddress = $listenAddress;
+        return $this;
+    }
+
+
+    public function setProxyNum(int $proxyNum): Actor
+    {
+        $this->proxyNum = $proxyNum;
+        return $this;
+    }
 
     /**
      * @param string $actorClass
@@ -46,30 +107,5 @@ class Actor
     public function attachServer(\swoole_server $server)
     {
 
-    }
-
-    public function generateProcess():array
-    {
-        $list = [];
-        /**
-         * @var string $actorClass
-         * @var ActorConfig $config
-         */
-        foreach ($this->actorList as $actorClass => $config){
-            $actorName = $config->getActorName();
-            $tempProxyList = [];
-            $proxyNum = $config->getProxyNum();
-            for($i = 1;$i <= $proxyNum;$i++){
-                $proxyConfig = new ProxyProcessConfig($config->toArray());
-                $tempProxyList['proxy'][] = new ActorProxyProcess("Actor.{$actorName}.Proxy.{$i}",$proxyConfig,false,2,true);
-            }
-            $workerNum = $config->getWorkerNum();
-            for($i = 1;$i <= $workerNum;$i++){
-                $workerConfig = new WorkerProcessConfig($config->toArray() + ['workerId'=>$i]);
-                $tempProxyList['worker'][] = new ActorWorkerProcess("Actor.{$actorName}.Worker.{$i}",$workerConfig,false,2,true);
-            }
-            $list[$actorName] = $tempProxyList;
-        }
-        return $list;
     }
 }

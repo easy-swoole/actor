@@ -9,16 +9,18 @@
 namespace EasySwoole\Actor;
 
 
-use EasySwoole\Actor\Bean\ServerNode;
+use EasySwoole\Actor\Bean\ActorNodeNode;
+use EasySwoole\Trigger\TriggerInterface;
 
-class ActorConfig extends ServerNode
+class ActorConfig extends ActorNodeNode
 {
     /*
      * 用于识别一个actor
      */
     protected $actorName;
     protected $actorClass;
-    protected $temDir;
+    protected $trigger;
+
 
     /**
      * @return mixed
@@ -75,5 +77,6 @@ class ActorConfig extends ServerNode
             $this->temDir = sys_get_temp_dir();
         }
     }
+
 
 }
