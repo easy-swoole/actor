@@ -1,22 +1,17 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: yf
- * Date: 2019-04-08
- * Time: 17:15
- */
 
-namespace EasySwoole\Actor\Bean;
+
+namespace EasySwoole\Actor;
 
 
 use EasySwoole\Spl\SplBean;
 
-class RequestCommand extends SplBean
+class ProxyCommand extends SplBean
 {
     public const CREATE = 1;
     protected $command;
     protected $arg;
-    protected $actorId;
+    protected $actorClass;
 
     /**
      * @return mixed
@@ -53,16 +48,16 @@ class RequestCommand extends SplBean
     /**
      * @return mixed
      */
-    public function getActorId()
+    public function getActorClass()
     {
-        return $this->actorId;
+        return $this->actorClass;
     }
 
     /**
-     * @param mixed $actorId
+     * @param mixed $actorClass
      */
-    public function setActorId($actorId): void
+    public function setActorClass($actorClass): void
     {
-        $this->actorId = $actorId;
+        $this->actorClass = $actorClass;
     }
 }

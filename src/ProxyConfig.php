@@ -13,8 +13,6 @@ class ProxyConfig extends SplBean
     protected $tempDir;
     protected $trigger;
     protected $machineId = '001';
-    protected $maxPackage;
-
     /**
      * @return array
      */
@@ -45,11 +43,6 @@ class ProxyConfig extends SplBean
     public function getMachineId(): string
     {
         return $this->machineId;
-    }
-
-    public function getMaxPackage():int
-    {
-        return $this->maxPackage;
     }
 
 }

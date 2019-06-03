@@ -4,27 +4,32 @@
 namespace EasySwoole\Actor;
 
 
-
-use EasySwoole\Actor\Bean\ActorNodeNode;
 use Swoole\Coroutine\Client;
 
 class ActorClient
 {
-    protected $config;
-    protected $client;
+    protected $actorNode;
+    protected $unixClient;
+    protected $actorClass;
+    protected $defaultCommand;
 
-    function __construct(ActorNodeNode $config)
+    function __construct(string $actorClass,ActorNode $node)
     {
-        $this->config = $config;
-
+        $this->actorNode = $node;
+        $this->actorClass = $actorClass;
+        $this->defaultCommand = new ProxyCommand();
+        $this->defaultCommand->setActorClass($actorClass);
     }
 
-    function create()
+    function create($arg = null,float $timeout = 10):?string
     {
-
+        $command = clone $this->defaultCommand;
+        $command->setCommand($command::CREATE);
+        $command->setArg($arg);
+        return $this->sendCommand($command,$timeout);
     }
 
-    function connect(ActorNodeNode $node):?Client
+    function connect(ActorNode $node):?Client
     {
         $client = new Client(SWOOLE_TCP);
         $client->set([
@@ -39,5 +44,26 @@ class ActorClient
             return $client;
         }
         return null;
+    }
+
+    function status()
+    {
+
+    }
+
+    function sendCommand(ProxyCommand $command,float $timeout = 10)
+    {
+        $client = $this->connect($this->actorNode);
+        if(!$client){
+            return null;
+        }
+        $str = Protocol::pack(serialize($command));
+        $client->send($str);
+        $data = $client->recv($timeout);
+        if(!empty($data)){
+            return unserialize(Protocol::unpack($data));
+        }else{
+            return null;
+        }
     }
 }

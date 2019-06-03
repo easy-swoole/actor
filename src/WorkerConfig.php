@@ -4,7 +4,7 @@
 namespace EasySwoole\Actor;
 
 
-class WorkerProcessActorConfig extends ActorConfig
+class WorkerConfig extends ActorConfig
 {
     protected $workerId;
 

@@ -3,9 +3,10 @@
 
 namespace EasySwoole\Actor;
 
-
 use EasySwoole\Actor\Exception\InvalidActor;
 use EasySwoole\Component\Process\Socket\TcpProcessConfig;
+use EasySwoole\Component\Process\Socket\UnixProcessConfig;
+use EasySwoole\Component\Singleton;
 use EasySwoole\Trigger\TriggerInterface;
 
 class Actor
@@ -19,17 +20,11 @@ class Actor
     private $machineId = '001';
     private $maxPackage = 1024*2;
 
+    use Singleton;
+
     function __construct()
     {
         $this->tempDir = sys_get_temp_dir();
-    }
-
-    /**
-     * @return string
-     */
-    public function getMachineId(): string
-    {
-        return $this->machineId;
     }
 
     /**
@@ -40,16 +35,16 @@ class Actor
         $this->maxPackage = $maxPackage;
     }
 
+    public function getMaxPackage():int
+    {
+        return $this->maxPackage;
+    }
+
     public function setMachineId(string $machineId): Actor
     {
         $machineId = substr($machineId,0,3);
         $this->machineId = $machineId;
         return $this;
-    }
-
-    public function getTrigger():?TriggerInterface
-    {
-        return $this->trigger;
     }
 
     public function setTrigger(TriggerInterface $trigger): Actor
@@ -62,6 +57,11 @@ class Actor
     {
         $this->tempDir = $tempDir;
         return $this;
+    }
+
+    function getTempDir():string
+    {
+        return $this->tempDir;
     }
 
     public function setListenPort(int $listenPort): Actor
@@ -84,6 +84,19 @@ class Actor
             $this->proxyNum = $proxyNum;
         }
         return $this;
+    }
+
+    public function getListenPort():int
+    {
+        return $this->listenPort;
+    }
+
+    public function getActorConfig(string $actorClass):?ActorConfig
+    {
+        if(isset($this->actorList[$actorClass])){
+            return $this->actorList[$actorClass];
+        }
+        return null;
     }
 
     /**
@@ -137,6 +150,18 @@ class Actor
             $config = clone $tcpProcessConfig;
             $config->setProcessName("Actor.Proxy.{$i}");
             $list['proxy'][$i] = new ProxyProcess($config);
+        }
+        /** @var ActorConfig $actorConfig */
+        foreach ($this->actorList as $actorConfig){
+            for ($i = 1;$i <= $actorConfig->getWorkerNum();$i++){
+                $unixSocket = new UnixProcessConfig();
+                $unixSocket->setProcessName("Actor.Worker.{$actorConfig->getActorName()}");
+                $unixSocket->setSocketFile("{$this->tempDir}/Actor.{$actorConfig->getActorName()}.{$i}.sock");
+                $arg = new WorkerConfig($actorConfig->toArray());
+                $arg->setWorkerId($i);
+                $unixSocket->setArg($arg);
+                $list['worker'][$actorConfig->getActorName()][] = new WorkerProcess($unixSocket);
+            }
         }
         return $list;
     }
