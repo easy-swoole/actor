@@ -9,9 +9,11 @@ use EasySwoole\Spl\SplBean;
 class ProxyCommand extends SplBean
 {
     public const CREATE = 1;
+    public const STOP = 2;
     protected $command;
+    protected $actorId;
     protected $arg;
-    protected $actorClass;
+    protected $actorName;
 
     /**
      * @return mixed
@@ -48,16 +50,34 @@ class ProxyCommand extends SplBean
     /**
      * @return mixed
      */
-    public function getActorClass()
+    public function getActorName()
     {
-        return $this->actorClass;
+        return $this->actorName;
     }
 
     /**
-     * @param mixed $actorClass
+     * @param mixed $actorName
      */
-    public function setActorClass($actorClass): void
+    public function setActorName($actorName): void
     {
-        $this->actorClass = $actorClass;
+        $this->actorName = $actorName;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getActorId()
+    {
+        return $this->actorId;
+    }
+
+    /**
+     * @param mixed $actorId
+     */
+    public function setActorId($actorId): void
+    {
+        $this->actorId = $actorId;
+    }
+
+
 }

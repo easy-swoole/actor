@@ -42,7 +42,11 @@ class Actor
 
     public function setMachineId(string $machineId): Actor
     {
-        $machineId = substr($machineId,0,3);
+        if($machineId < 3){
+            $machineId = str_pad($machineId,3,'0',STR_PAD_LEFT);
+        }else{
+            $machineId = substr($machineId,0,3);
+        }
         $this->machineId = $machineId;
         return $this;
     }
@@ -159,6 +163,8 @@ class Actor
                 $unixSocket->setSocketFile("{$this->tempDir}/Actor.{$actorConfig->getActorName()}.{$i}.sock");
                 $arg = new WorkerConfig($actorConfig->toArray());
                 $arg->setWorkerId($i);
+                $arg->setMachineId($this->machineId);
+                $arg->setTrigger($this->trigger);
                 $unixSocket->setArg($arg);
                 $list['worker'][$actorConfig->getActorName()][] = new WorkerProcess($unixSocket);
             }

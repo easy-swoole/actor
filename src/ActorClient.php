@@ -10,21 +10,28 @@ class ActorClient
 {
     protected $actorNode;
     protected $unixClient;
-    protected $actorClass;
     protected $defaultCommand;
 
-    function __construct(string $actorClass,ActorNode $node)
+    function __construct(string $actorName,ActorNode $node)
     {
         $this->actorNode = $node;
-        $this->actorClass = $actorClass;
         $this->defaultCommand = new ProxyCommand();
-        $this->defaultCommand->setActorClass($actorClass);
+        $this->defaultCommand->setActorName($actorName);
     }
 
     function create($arg = null,float $timeout = 10):?string
     {
         $command = clone $this->defaultCommand;
         $command->setCommand($command::CREATE);
+        $command->setArg($arg);
+        return $this->sendCommand($command,$timeout);
+    }
+
+    function stop(string $actorId,$arg = null,float $timeout = 10)
+    {
+        $command = clone $this->defaultCommand;
+        $command->setCommand($command::STOP);
+        $command->setActorId($actorId);
         $command->setArg($arg);
         return $this->sendCommand($command,$timeout);
     }
@@ -51,7 +58,7 @@ class ActorClient
 
     }
 
-    function sendCommand(ProxyCommand $command,float $timeout = 10)
+    private function sendCommand(ProxyCommand $command,float $timeout = 10)
     {
         $client = $this->connect($this->actorNode);
         if(!$client){

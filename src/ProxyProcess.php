@@ -11,11 +11,24 @@ namespace EasySwoole\Actor;
 
 use EasySwoole\Component\AtomicManager;
 use EasySwoole\Component\Process\Socket\AbstractTcpProcess;
+use EasySwoole\Component\Process\Socket\TcpProcessConfig;
 use Swoole\Coroutine\Client;
 use Swoole\Coroutine\Socket;
 
 class ProxyProcess extends AbstractTcpProcess
 {
+    protected $actorList = [];
+    function __construct(TcpProcessConfig $config)
+    {
+        /** @var ProxyConfig $actorConfig */
+        $actorConfig  = $config->getArg();
+        /** @var ActorConfig $item */
+        foreach ($actorConfig->getActorList() as $item){
+            $this->actorList[$item->getActorName()] = $item;
+        }
+        parent::__construct($config);
+    }
+
     function onAccept(Socket $socket)
     {
         /** @var ProxyConfig $config */
@@ -31,38 +44,59 @@ class ProxyProcess extends AbstractTcpProcess
             $socket->close();
             return;
         }
-        $data = $socket->recvAll($allLength,3);
-        if(strlen($data) != $allLength){
+        $proxyData = $socket->recvAll($allLength,3);
+        if(strlen($proxyData) != $allLength){
             $socket->close();
             return;
         }
-        $command = unserialize($data);
+        $command = unserialize($proxyData);
         if(!$command instanceof ProxyCommand){
             $socket->close();
             return;
         }
+        if(!isset($this->actorList[$command->getActorName()]))
+        {
+            $socket->sendAll(Protocol::pack(serialize(null)));
+            $socket->close();
+            return;
+        }else{
+            /** @var ActorConfig $actorConfig */
+            $actorConfig = $this->actorList[$command->getActorName()];
+        }
+        $response = null;
         switch ($command->getCommand()){
             case ProxyCommand::CREATE:{
-                if(isset($config->getActorList()[$command->getActorClass()])){
-                    /** @var ActorConfig $actorConfig */
-                    $actorConfig = $config->getActorList()[$command->getActorClass()];
-                    $info = [];
-                    for($i = 1;$i <= $actorConfig->getWorkerNum();$i++){
-                        $info[$i] = AtomicManager::getInstance()->get("{$actorConfig->getActorName()}.{$i}")->get();
-                    }
-                    asort($info);
-                    $targetId = key($info);
-                    $socketFile = Actor::getInstance()->getTempDir();
-                    $socketFile = "{$socketFile}/Actor.{$actorConfig->getActorName()}.{$targetId}.sock";
-                    $response = $this->proxy($socketFile,$data);
-                    $socket->sendAll(Protocol::pack(serialize($response)));
-                    $socket->close();
+                $actorConfig = $this->actorList[$command->getActorName()];
+                $info = [];
+                for($i = 1;$i <= $actorConfig->getWorkerNum();$i++){
+                    $info[$i] = AtomicManager::getInstance()->get("{$actorConfig->getActorName()}.{$i}")->get();
                 }
+                asort($info);
+                $targetId = key($info);
+                $socketFile = $this->actorUnixFile($actorConfig,$targetId);
+                $response = $this->proxy($socketFile,$proxyData);
+                break;
+            }
+            case ProxyCommand::STOP:{
+                $actorId = $command->getActorId();
+                $workerId = trim(substr($actorId,3,2),'0');
+                if(empty($workerId)){
+                    break;
+                }
+                $socketFile = $this->actorUnixFile($actorConfig,$workerId);
+                $response = $this->proxy($socketFile,$proxyData);
                 break;
             }
         }
+        $socket->sendAll(Protocol::pack(serialize($response)));
+        $socket->close();
     }
 
+    private function actorUnixFile(ActorConfig $config,int $workerId)
+    {
+        $socketFile = Actor::getInstance()->getTempDir();
+        return "{$socketFile}/Actor.{$config->getActorName()}.{$workerId}.sock";
+    }
 
     /*
      * 发送代理数据

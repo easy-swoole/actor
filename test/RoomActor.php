@@ -9,10 +9,25 @@ use EasySwoole\Actor\ActorConfig;
 
 class RoomActor extends AbstractActor
 {
-
     public static function configure(ActorConfig $actorConfig)
     {
-        // TODO: Implement configure() method.
         $actorConfig->setActorName('Room');
     }
+
+    public function onStart()
+    {
+        // TODO: Implement onStart() method.
+    }
+
+    public function onMessage($msg)
+    {
+        var_dump($msg);
+    }
+
+    public function onExit($arg)
+    {
+        // TODO: Implement onExit() method.
+    }
+
+
 }
