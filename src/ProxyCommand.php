@@ -9,7 +9,11 @@ use EasySwoole\Spl\SplBean;
 class ProxyCommand extends SplBean
 {
     public const CREATE = 1;
-    public const STOP = 2;
+    public const EXIT = 2;
+    public const EXIT_ALL = 3;
+    public const STATUS = 4;
+    public const SEND_MSG = 5;
+    public const SEND_ALL = 6;
     protected $command;
     protected $actorId;
     protected $arg;
@@ -78,6 +82,4 @@ class ProxyCommand extends SplBean
     {
         $this->actorId = $actorId;
     }
-
-
 }

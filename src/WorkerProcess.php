@@ -19,6 +19,7 @@ class WorkerProcess extends AbstractUnixProcess
     private $workerPrefix;
     private $actorClass;
     private $actorName;
+    private $mailBox;
 
     function __construct(UnixProcessConfig $config)
     {
@@ -31,6 +32,22 @@ class WorkerProcess extends AbstractUnixProcess
         $this->workerPrefix = str_pad($workerConfig->getWorkerId(),2,'0',STR_PAD_LEFT);
         AtomicManager::getInstance()->add("{$this->actorName}.{$this->workerId}");
         parent::__construct($config);
+    }
+
+    public function run($arg)
+    {
+        $this->mailBox = new Channel(64);
+        go(function (){
+           while (1){
+               $msg = $this->mailBox->pop(-1);
+               //此处用来执行actor 删除
+               if($msg['command'] == 'exit'){
+                   unset($this->actorList[$msg['actorId']]);
+                   AtomicManager::getInstance()->get("{$this->actorName}.{$this->workerId}")->sub(1);
+               }
+           }
+        });
+        parent::run($arg);
     }
 
     function onAccept(Socket $socket)
@@ -57,14 +74,14 @@ class WorkerProcess extends AbstractUnixProcess
             return;
         }
         switch ($command->getCommand()){
-            case $command::CREATE:{
+            case ProxyCommand::CREATE:{
                 $this->actorIndex++;
                 $actorId = $this->machineId.$this->workerPrefix.str_pad($this->actorIndex,18,'0',STR_PAD_LEFT);
                 $class = $this->actorClass;
                 try{
                     $channel = new Channel(16);
-                    $actor = new $class($channel,$command->getArg());
-                    $actor->__run();
+                    $actor = new $class($channel,$actorId,$command->getArg());
+                    $actor->__run($this->mailBox);
                     AtomicManager::getInstance()->get("{$this->actorName}.{$this->workerId}")->add(1);
                     $this->actorList[$actorId] = $channel;
                 }catch (\Throwable $throwable){
@@ -76,18 +93,67 @@ class WorkerProcess extends AbstractUnixProcess
                 }
                 break;
             }
-            case $command::STOP:{
-                $actorId = $command->getArg();
-                $socket->sendAll(Protocol::pack(serialize('stop')));
+            case ProxyCommand::EXIT:{
+                $actorId = $command->getActorId();
+                if(isset($this->actorList[$actorId])){
+                    $this->actorList[$actorId]->push([
+                        'msg'=>'exit',
+                        'socket'=>$socket,
+                        'arg'=>$command->getArg()
+                    ]);
+                }else{
+                    $socket->sendAll(Protocol::pack(serialize(false)));
+                    $socket->close();
+                }
+                break;
+            }
+            case ProxyCommand::SEND_MSG:{
+                $actorId = $command->getActorId();
+                if(isset($this->actorList[$actorId])){
+                    $this->actorList[$actorId]->push([
+                        'msg'=>$command->getArg(),
+                        'socket'=>$socket,
+                    ]);
+                }else{
+                    $socket->sendAll(Protocol::pack(serialize(false)));
+                    $socket->close();
+                }
+                break;
+            }
+            case ProxyCommand::SEND_ALL:{
+                /** @var Channel $channel */
+                foreach ($this->actorList as $channel){
+                    $channel->push([
+                        'msg'=>$command->getArg(),
+                    ]);
+                }
+                $socket->sendAll(Protocol::pack(serialize(true)));
+                $socket->close();
+                break;
+            }
+            case ProxyCommand::EXIT_ALL:{
+                /** @var Channel $channel */
+                foreach ($this->actorList as $channel){
+                    $channel->push([
+                        'msg'=>'exit',
+                        'arg'=>$command->getArg()
+                    ]);
+                }
+                $socket->sendAll(Protocol::pack(serialize(true)));
                 $socket->close();
                 break;
             }
         }
-
     }
 
     protected function onException(\Throwable $throwable, ...$args)
     {
-        throw $throwable;
+        /** @var WorkerConfig $workerConfig */
+        $workerConfig = $this->getArg();
+        if($workerConfig->getTrigger()){
+            $workerConfig->getTrigger()->throwable($throwable);
+        }else{
+            throw $throwable;
+        }
     }
 }

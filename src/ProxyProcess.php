@@ -77,14 +77,34 @@ class ProxyProcess extends AbstractTcpProcess
                 $response = $this->proxy($socketFile,$proxyData);
                 break;
             }
-            case ProxyCommand::STOP:{
+            case ProxyCommand::SEND_ALL:
+            case ProxyCommand::EXIT_ALL:{
+                $response = true;
+                for($i = 1;$i <= $actorConfig->getWorkerNum();$i++){
+                    $socketFile = $this->actorUnixFile($actorConfig,$i);
+                    $this->proxy($socketFile,$proxyData);
+                }
+                break;
+            }
+
+            case ProxyCommand::EXIT:
+            case ProxyCommand::SEND_MSG:{
                 $actorId = $command->getActorId();
-                $workerId = trim(substr($actorId,3,2),'0');
-                if(empty($workerId)){
+                $workerId = intval(trim(substr($actorId,3,2),'0'));
+                if($workerId <= 0){
                     break;
                 }
                 $socketFile = $this->actorUnixFile($actorConfig,$workerId);
                 $response = $this->proxy($socketFile,$proxyData);
+                break;
+            }
+
+            case ProxyCommand::STATUS:{
+                $info = [];
+                for($i = 1;$i <= $actorConfig->getWorkerNum();$i++){
+                    $info[$i] = AtomicManager::getInstance()->get("{$actorConfig->getActorName()}.{$i}")->get();
+                }
+                $response = $info;
                 break;
             }
         }

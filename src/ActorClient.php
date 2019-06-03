@@ -27,14 +27,47 @@ class ActorClient
         return $this->sendCommand($command,$timeout);
     }
 
-    function stop(string $actorId,$arg = null,float $timeout = 10)
+    function exit(string $actorId,$arg = null,float $timeout = 10)
     {
         $command = clone $this->defaultCommand;
-        $command->setCommand($command::STOP);
+        $command->setCommand(ProxyCommand::EXIT);
         $command->setActorId($actorId);
         $command->setArg($arg);
         return $this->sendCommand($command,$timeout);
     }
+
+    function send(string $actorId,$msg,float $timeout = 10)
+    {
+        $command = clone $this->defaultCommand;
+        $command->setCommand(ProxyCommand::SEND_MSG);
+        $command->setActorId($actorId);
+        $command->setArg($msg);
+        return $this->sendCommand($command,$timeout);
+    }
+
+    function sendAll($msg,float $timeout = 10)
+    {
+        $command = clone $this->defaultCommand;
+        $command->setCommand(ProxyCommand::SEND_ALL);
+        $command->setArg($msg);
+        return $this->sendCommand($command,$timeout);
+    }
+
+    function exitAll($arg = null,float $timeout = 10)
+    {
+        $command = clone $this->defaultCommand;
+        $command->setCommand(ProxyCommand::EXIT_ALL);
+        $command->setArg($arg);
+        return $this->sendCommand($command,$timeout);
+    }
+
+    function status(float $timeout = 10)
+    {
+        $command = clone $this->defaultCommand;
+        $command->setCommand(ProxyCommand::STATUS);
+        return $this->sendCommand($command,$timeout);
+    }
+
 
     function connect(ActorNode $node):?Client
     {
@@ -51,11 +84,6 @@ class ActorClient
             return $client;
         }
         return null;
-    }
-
-    function status()
-    {
-
     }
 
     private function sendCommand(ProxyCommand $command,float $timeout = 10)

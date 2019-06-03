@@ -5,29 +5,86 @@ namespace EasySwoole\Actor;
 
 
 use Swoole\Coroutine\Channel;
+use Swoole\Coroutine\Socket;
 
 abstract class AbstractActor
 {
     private $arg;
+    /** @var Channel  */
     private $mailBox;
-    function __construct(Channel $mailBox,$arg)
+    /** @var Channel */
+    private $masterMail;
+    private $exit = false;
+    private $actorId;
+    function __construct(Channel $mailBox,string $actorId,$arg)
     {
         $this->mailBox = $mailBox;
         $this->arg = $arg;
+        $this->actorId = $actorId;
     }
 
     abstract public static function configure(ActorConfig $actorConfig);
-    abstract public function onStart();
-    abstract public function onMessage($msg);
-    abstract public function onExit($arg);
+    abstract protected function onStart();
+    abstract protected function onMessage($msg);
+    abstract protected function onExit($arg);
+    abstract protected function onException(\Throwable $throwable);
 
-
-    function __run()
+    public function actorId()
     {
+        return $this->actorId;
+    }
+
+    public function getArg()
+    {
+        $this->arg;
+    }
+
+    function exit($arg = null)
+    {
+        if(!$this->exit){
+            $this->exit = true;
+            $this->mailBox->push([
+                'msg'=>'exit',
+                'arg'=>$arg
+            ]);
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    function __run(Channel $masterBox)
+    {
+        $this->masterMail = $masterBox;
+        $this->onStart();
         go(function (){
-            while (1){
+            while (!$this->exit){
                 $msg = $this->mailBox->pop(-1);
-                var_dump($msg);
+                if(is_array($msg)){
+                    go(function ()use($msg){
+                        $reply = null;
+                        try{
+                            if($msg['msg'] == 'exit'){
+                                $reply = $this->onExit($msg['arg']);
+                            }else{
+                                $reply = $this->onMessage($msg['msg']);
+                            }
+                        }catch (\Throwable $throwable){
+                            $reply = $this->onException($throwable);
+                        }finally{
+                            if($msg['msg'] == 'exit'){
+                                $this->masterMail->push([
+                                    'actorId'=>$this->actorId,
+                                    'command'=>'exit'
+                                ]);
+                            }
+                            if(isset($msg['socket']) && $msg['socket'] instanceof Socket){
+                                $msg['socket']->sendAll(Protocol::pack(serialize($reply)));
+                                $msg['socket']->close();
+                            }
+                        }
+                    });
+                }
             }
         });
     }

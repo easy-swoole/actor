@@ -16,18 +16,24 @@ class RoomActor extends AbstractActor
 
     public function onStart()
     {
-        // TODO: Implement onStart() method.
+        var_dump('room actor '.$this->actorId().' start');
     }
 
     public function onMessage($msg)
     {
-        var_dump($msg);
+        var_dump('room actor '.$this->actorId().' onmessage: '.$msg);
+        return 'reply at '.time();
     }
 
     public function onExit($arg)
     {
-        // TODO: Implement onExit() method.
+        var_dump('room actor '.$this->actorId().' exit at arg: '.$arg);
+        return 'exit at '.time();
     }
 
+    protected function onException(\Throwable $throwable)
+    {
+       var_dump($throwable->getMessage());
+    }
 
 }
