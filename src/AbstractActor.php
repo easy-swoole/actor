@@ -4,6 +4,7 @@
 namespace EasySwoole\Actor;
 
 
+use EasySwoole\Actor\Exception\InvalidActor;
 use Swoole\Coroutine\Channel;
 use Swoole\Coroutine\Socket;
 
@@ -132,7 +133,11 @@ abstract class AbstractActor
 
     public static function client(ActorNode $node = null)
     {
-        $actorName = Actor::getInstance()->getActorConfig(static::class)->getActorName();
+        $actorConf = Actor::getInstance()->getActorConfig(static::class);
+        if(!$actorConf){
+            throw new InvalidActor(static::class.' not register');
+        }
+        $actorName = $actorConf->getActorName();
         if($node == null){
             /*
              * 未指定说明是调用本机
