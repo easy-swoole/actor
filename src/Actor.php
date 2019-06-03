@@ -132,7 +132,17 @@ class Actor
 
     public function attachServer(\swoole_server $server)
     {
-
+        $list = $this->generateProcess();
+        foreach ($list['proxy'] as  $proxy){
+            /** @var ProxyProcess $proxy */
+            $server->addProcess($proxy->getProcess());
+        }
+        foreach ($list['worker'] as $actors){
+            foreach ($actors as $actorProcess){
+                /** @var ProxyProcess $actorProcess */
+                $server->addProcess($actorProcess->getProcess());
+            }
+        }
     }
 
     public function generateProcess():array

@@ -16,6 +16,8 @@ abstract class AbstractActor
     private $masterMail;
     private $exit = false;
     private $actorId;
+    private $tickList = [];
+
     function __construct(Channel $mailBox,string $actorId,$arg)
     {
         $this->mailBox = $mailBox;
@@ -28,6 +30,41 @@ abstract class AbstractActor
     abstract protected function onMessage($msg);
     abstract protected function onExit($arg);
     abstract protected function onException(\Throwable $throwable);
+
+    /*
+     * 请用该方法来添加定时器，方便退出的时候自动清理定时器
+     */
+    function tick($time, callable $callback)
+    {
+        $id = swoole_timer_tick($time, function () use ($callback) {
+            try {
+                call_user_func($callback);
+            } catch (\Throwable $throwable) {
+                $this->onException($throwable);
+            }
+        });
+        $this->tickList[$id] = $id;
+        return $id;
+    }
+    /*
+     * 请用该方法来添加定时器，方便退出的时候自动清理定时器
+     */
+    function after($time, callable $callback)
+    {
+        $id = swoole_timer_after($time, function () use ($callback) {
+            try {
+                call_user_func($callback);
+            } catch (\Throwable $throwable) {
+                $this->onException($throwable);
+            }
+        });
+        return $id;
+    }
+    function deleteTick(int $timerId)
+    {
+        unset($this->tickList[$timerId]);
+        return swoole_timer_clear($timerId);
+    }
 
     public function actorId()
     {
@@ -65,6 +102,10 @@ abstract class AbstractActor
                         $reply = null;
                         try{
                             if($msg['msg'] == 'exit'){
+                                //清理定时器
+                                foreach ($this->tickList as $tickId) {
+                                    swoole_timer_clear($tickId);
+                                }
                                 $reply = $this->onExit($msg['arg']);
                             }else{
                                 $reply = $this->onMessage($msg['msg']);
