@@ -5,6 +5,7 @@ namespace EasySwoole\Actor;
 
 
 use EasySwoole\Actor\Exception\InvalidActor;
+use EasySwoole\Component\Process\Socket\TcpProcessConfig;
 use EasySwoole\Trigger\TriggerInterface;
 
 class Actor
@@ -16,6 +17,7 @@ class Actor
     private $proxyNum = 3;
     private $trigger;
     private $machineId = '001';
+    private $maxPackage = 1024*2;
 
     function __construct()
     {
@@ -28,6 +30,14 @@ class Actor
     public function getMachineId(): string
     {
         return $this->machineId;
+    }
+
+    /**
+     * @param float|int $maxPackage
+     */
+    public function setMaxPackage($maxPackage): void
+    {
+        $this->maxPackage = $maxPackage;
     }
 
     public function setMachineId(string $machineId): Actor
@@ -70,7 +80,9 @@ class Actor
 
     public function setProxyNum(int $proxyNum): Actor
     {
-        $this->proxyNum = $proxyNum;
+        if($proxyNum > 0){
+            $this->proxyNum = $proxyNum;
+        }
         return $this;
     }
 
@@ -91,10 +103,7 @@ class Actor
                 if(in_array($config->getActorName(),$this->actorList)){
                     throw new InvalidActor("actor name for class:{$actorClass} is duplicate");
                 }
-                if(empty($config->getListenPort())){
-                    throw new InvalidActor("actor listen port is required for class:{$actorClass}");
-                }
-                $config->__setActorClass($actorClass);
+                $config->setActorClass($actorClass);
                 $this->actorList[$actorClass] = $config;
             }else{
                 throw new InvalidActor("{$actorClass} is not an sub class of ".AbstractActor::class);
@@ -107,5 +116,28 @@ class Actor
     public function attachServer(\swoole_server $server)
     {
 
+    }
+
+    public function generateProcess():array
+    {
+        $list = [];
+        $proxyConfig = new ProxyConfig([
+            'actorList'=>$this->actorList,
+            'tempDir'=>$this->tempDir,
+            'trigger'=>$this->trigger,
+            'machineId'=>$this->machineId,
+            'maxPackage'=>$this->maxPackage
+        ]);
+        $tcpProcessConfig = new TcpProcessConfig();
+        $tcpProcessConfig->setListenPort($this->listenPort);
+        $tcpProcessConfig->setListenAddress($this->listenAddress);
+        $tcpProcessConfig->setArg($proxyConfig);
+        for($i = 1;$i <= $this->proxyNum;$i++)
+        {
+            $config = clone $tcpProcessConfig;
+            $config->setProcessName("Actor.Proxy.{$i}");
+            $list['proxy'][$i] = new ProxyProcess($config);
+        }
+        return $list;
     }
 }

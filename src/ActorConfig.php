@@ -10,7 +10,6 @@ namespace EasySwoole\Actor;
 
 
 use EasySwoole\Actor\Bean\ActorNodeNode;
-use EasySwoole\Trigger\TriggerInterface;
 
 class ActorConfig extends ActorNodeNode
 {
@@ -19,7 +18,6 @@ class ActorConfig extends ActorNodeNode
      */
     protected $actorName;
     protected $actorClass;
-    protected $trigger;
 
 
     /**
@@ -41,22 +39,6 @@ class ActorConfig extends ActorNodeNode
     /**
      * @return mixed
      */
-    public function getTemDir()
-    {
-        return $this->temDir;
-    }
-
-    /**
-     * @param mixed $temDir
-     */
-    public function setTemDir($temDir): void
-    {
-        $this->temDir = $temDir;
-    }
-
-    /**
-     * @return mixed
-     */
     public function getActorClass()
     {
         return $this->actorClass;
@@ -65,18 +47,8 @@ class ActorConfig extends ActorNodeNode
     /**
      * @param mixed $actorClass
      */
-    public function __setActorClass($actorClass): void
+    public function setActorClass($actorClass): void
     {
         $this->actorClass = $actorClass;
     }
-
-    protected function initialize(): void
-    {
-        parent::initialize();
-        if(empty($this->temDir)){
-            $this->temDir = sys_get_temp_dir();
-        }
-    }
-
-
 }
