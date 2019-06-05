@@ -74,7 +74,7 @@ abstract class AbstractActor
 
     public function getArg()
     {
-        $this->arg;
+        return $this->arg;
     }
 
     function exit($arg = null)
