@@ -12,6 +12,7 @@ use EasySwoole\Trigger\TriggerInterface;
 class Actor
 {
     private $actorList = [];
+    private $actorClassMap = [];
     private $tempDir;
     private $listenPort = 9500;
     private $listenAddress = '0.0.0.0';
@@ -97,8 +98,8 @@ class Actor
 
     public function getActorConfig(string $actorClass):?ActorConfig
     {
-        if(isset($this->actorList[$actorClass])){
-            return $this->actorList[$actorClass];
+        if(isset($this->actorClassMap[$actorClass])){
+            return $this->actorClassMap[$actorClass];
         }
         return null;
     }
@@ -117,11 +118,12 @@ class Actor
                 if(empty($config->getActorName())){
                     throw new InvalidActor("actor name for class:{$actorClass} is required");
                 }
-                if(in_array($config->getActorName(),$this->actorList)){
+                if(array_key_exists($config->getActorName(),$this->actorList)){
                     throw new InvalidActor("actor name for class:{$actorClass} is duplicate");
                 }
                 $config->setActorClass($actorClass);
-                $this->actorList[$actorClass] = $config;
+                $this->actorList[$config->getActorName()] = $config;
+                $this->actorClassMap[$actorClass] = $config;
             }else{
                 throw new InvalidActor("{$actorClass} is not an sub class of ".AbstractActor::class);
             }
