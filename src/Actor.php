@@ -43,7 +43,7 @@ class Actor
 
     public function setMachineId(string $machineId): Actor
     {
-        if($machineId < 3){
+        if(strlen($machineId) < 3){
             $machineId = str_pad($machineId,3,'0',STR_PAD_LEFT);
         }else{
             $machineId = substr($machineId,0,3);
@@ -161,12 +161,14 @@ class Actor
         $tcpProcessConfig->setListenPort($this->listenPort);
         $tcpProcessConfig->setListenAddress($this->listenAddress);
         $tcpProcessConfig->setArg($proxyConfig);
+        $list['proxy'] = [];
         for($i = 1;$i <= $this->proxyNum;$i++)
         {
             $config = clone $tcpProcessConfig;
             $config->setProcessName("Actor.Proxy.{$i}");
             $list['proxy'][$i] = new ProxyProcess($config);
         }
+        $list['worker'] = [];
         /** @var ActorConfig $actorConfig */
         foreach ($this->actorList as $actorConfig){
             for ($i = 1;$i <= $actorConfig->getWorkerNum();$i++){
