@@ -7,6 +7,7 @@ namespace EasySwoole\Actor;
 use EasySwoole\Actor\Exception\InvalidActor;
 use Swoole\Coroutine\Channel;
 use Swoole\Coroutine\Socket;
+use Swoole\Timer;
 
 abstract class AbstractActor
 {
@@ -37,7 +38,7 @@ abstract class AbstractActor
      */
     function tick($time, callable $callback)
     {
-        $id = swoole_timer_tick($time, function () use ($callback) {
+        $id = Timer::tick($time, function () use ($callback) {
             try {
                 call_user_func($callback);
             } catch (\Throwable $throwable) {
@@ -52,7 +53,7 @@ abstract class AbstractActor
      */
     function after($time, callable $callback)
     {
-        $id = swoole_timer_after($time, function () use ($callback) {
+        $id = Timer::after($time, function () use ($callback) {
             try {
                 call_user_func($callback);
             } catch (\Throwable $throwable) {
@@ -61,10 +62,25 @@ abstract class AbstractActor
         });
         return $id;
     }
+
     function deleteTick(int $timerId)
     {
-        unset($this->tickList[$timerId]);
-        return swoole_timer_clear($timerId);
+        if(isset($this->tickList[$timerId])){
+            unset($this->tickList[$timerId]);
+        }
+        if(Timer::info($timerId)){
+            Timer::clear($timerId);
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    function clearAllTick()
+    {
+        foreach ($this->tickList as $item){
+            $this->deleteTick($item);
+        }
     }
 
     public function actorId()
@@ -103,10 +119,7 @@ abstract class AbstractActor
                         $reply = null;
                         try{
                             if($msg['msg'] == 'exit'){
-                                //清理定时器
-                                foreach ($this->tickList as $tickId) {
-                                    swoole_timer_clear($tickId);
-                                }
+                                $this->clearAllTick();
                                 $reply = $this->onExit($msg['arg']);
                             }else{
                                 $reply = $this->onMessage($msg['msg']);
