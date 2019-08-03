@@ -143,6 +143,13 @@ class WorkerProcess extends AbstractUnixProcess
                 $socket->close();
                 break;
             }
+            case ProxyCommand::EXIST:{
+                $actorId = $command->getActorId();
+                $result=isset($this->actorList[$actorId]) ? true : false;
+                $socket->sendAll(Protocol::pack(serialize($result)));
+                $socket->close();
+                break;
+            }
         }
     }
 
