@@ -88,7 +88,8 @@ class ProxyProcess extends AbstractTcpProcess
             }
 
             case ProxyCommand::EXIT:
-            case ProxyCommand::SEND_MSG:{
+            case ProxyCommand::SEND_MSG:
+            case ProxyCommand::EXIST:{
                 $actorId = $command->getActorId();
                 $workerId = intval(trim(substr($actorId,3,2),'0'));
                 if($workerId <= 0){

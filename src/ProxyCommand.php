@@ -14,6 +14,9 @@ class ProxyCommand extends SplBean
     public const STATUS = 4;
     public const SEND_MSG = 5;
     public const SEND_ALL = 6;
+    public const EXIST = 7;
+
+
     protected $command;
     protected $actorId;
     protected $arg;
