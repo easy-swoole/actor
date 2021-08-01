@@ -14,10 +14,7 @@
     "require": {
         "php": ">=7.1.0",
         "ext-swoole":"^4.4.0",
-        "easyswoole/component": ">=1.0",
-        "easyswoole/spl": "^1.1",
-        "easyswoole/utility": "^1.0",
-        "easyswoole/trigger": "^1.0"
+        "easyswoole/spl": "^1.1"
     },
     "require-dev": {
         "easyswoole/swoole-ide-helper": "^1.2"
