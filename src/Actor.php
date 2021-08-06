@@ -4,6 +4,7 @@ namespace EasySwoole\Actor;
 
 use EasySwoole\Actor\AbstractInterface\AbstractActor;
 use EasySwoole\Actor\Exception\Exception;
+use EasySwoole\Component\Process\Socket\TcpProcessConfig;
 use EasySwoole\Component\Singleton;
 use Swoole\Server;
 
@@ -40,7 +41,7 @@ class Actor
 
     function attachServer(Server $server)
     {
-
+        $proxyConfig = new TcpProcessConfig($this->config->toArray());
     }
 
 }
