@@ -41,7 +41,7 @@ class WorkerProcess extends AbstractUnixProcess
            while (1){
                $msg = $this->mailBox->pop(-1);
                //此处用来执行actor 删除
-               if($msg['command'] == 'exit'){
+               if(!empty($msg['command']) && $msg['command'] == 'exit'){
                    unset($this->actorList[$msg['actorId']]);
                    AtomicManager::getInstance()->get("{$this->actorName}.{$this->workerId}")->sub(1);
                }
