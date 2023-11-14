@@ -7,6 +7,7 @@ namespace EasySwoole\Actor;
 use EasySwoole\Component\AtomicManager;
 use EasySwoole\Component\Process\Socket\AbstractUnixProcess;
 use EasySwoole\Component\Process\Socket\UnixProcessConfig;
+use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
 use Swoole\Coroutine\Socket;
 
@@ -37,15 +38,18 @@ class WorkerProcess extends AbstractUnixProcess
     public function run($arg)
     {
         $this->mailBox = new Channel(64);
-        go(function (){
-           while (1){
-               $msg = $this->mailBox->pop(-1);
-               //此处用来执行actor 删除
-               if($msg['command'] == 'exit'){
-                   unset($this->actorList[$msg['actorId']]);
-                   AtomicManager::getInstance()->get("{$this->actorName}.{$this->workerId}")->sub(1);
-               }
-           }
+        Coroutine::create(function (){
+            while (1){
+                $msg = $this->mailBox->pop(-1);
+                if(!is_array($msg)){
+                    break;
+                }
+                //此处用来执行actor 删除
+                if($msg['command'] == 'exit'){
+                    unset($this->actorList[$msg['actorId']]);
+                    AtomicManager::getInstance()->get("{$this->actorName}.{$this->workerId}")->sub(1);
+                }
+            }
         });
         parent::run($arg);
     }
